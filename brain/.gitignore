@@ -1,0 +1,45 @@
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+auth/
+
+# Environment Variables
+.env
+.env.local
+.env.*
+!.env.example
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# FastAPI / Uvicorn
+# If you use a file-based logger
+*.log
+nohup.out
+
+# Packaging & Distribution
+dist/
+build/
+*.egg-info/
+nosetests.xml
+coverage.xml
+htmlcov/
+.tox/
+
+# OS
+.DS_Store
+Thumbs.db
