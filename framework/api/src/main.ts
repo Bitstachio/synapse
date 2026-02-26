@@ -21,7 +21,7 @@ const bootstrap = async () => {
     }),
   );
   app.enableCors();
-  app.setGlobalPrefix("api/v2");
+  app.setGlobalPrefix("api/v1");
 
   const config = new DocumentBuilder()
     .setTitle("Synapse Framework API")
