@@ -6,5 +6,5 @@ from pydantic import BaseModel
 class UserStoryVerdict(BaseModel):
     is_safe: bool
     risk_score: float
-    detected_issues: List[str]
+    violated_controls: List[str]
     remediation: str

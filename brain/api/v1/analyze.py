@@ -3,25 +3,21 @@ from fastapi import APIRouter
 from models.response_schema import StandardResponse
 from models.user_story_request import UserStoryRequest
 from models.user_story_verdict import UserStoryVerdict
+from services.nlp_service import NLPService
 
-# In a real app, you'd use Dependency Injection for the service
-# For now, we'll keep it simple
 router = APIRouter()
+
+# Instantiate the service
+# Later, we can use 'Depends' for cleaner dependency injection
+nlp_service = NLPService()
 
 
 @router.post("/analyze-story", response_model=StandardResponse[UserStoryVerdict])
 async def analyze_user_story(
     payload: UserStoryRequest,
 ) -> StandardResponse[UserStoryVerdict]:
-    # This is where we will eventually call our nlp_service
-    # For this step, we'll just mock the service call
-    mock_data = UserStoryVerdict(
-        is_safe=True,
-        risk_score=0.1,
-        detected_issues=[],
-        remediation="Standard compliance met.",
-    )
+    result = await nlp_service.analyze_story(payload.story_text)
 
     return StandardResponse[UserStoryVerdict](
-        success=True, message="User story analyzed successfully", data=mock_data
+        success=True, message="Synapse analysis complete", data=result
     )
