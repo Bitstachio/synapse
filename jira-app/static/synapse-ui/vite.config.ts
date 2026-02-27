@@ -4,6 +4,8 @@ import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Set base to './' for relative asset paths, required for Forge Custom UI
+  base: './',
   plugins: [
     react({
       babel: {
