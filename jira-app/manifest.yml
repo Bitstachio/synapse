@@ -16,6 +16,10 @@ resources:
 permissions:
   scopes:
     - read:jira-work
+  external:
+    fetch:
+      backend:
+        - "https://synapse-0olq.onrender.com"
 app:
   runtime:
     name: nodejs24.x
