@@ -21,4 +21,12 @@ body {
   --color-jira-blue: #0052cc;
   --color-jira-text: var(--ds-text);
   --color-jira-bg: var(--ds-surface);
+
+  /* Synapse risk levels (0–0.3 low, 0.4–0.6 moderate, 0.7–1 high) */
+  --color-risk-low: #059669;
+  --color-risk-low-bg: #d1fae5;
+  --color-risk-moderate: #b45309;
+  --color-risk-moderate-bg: #fef3c7;
+  --color-risk-high: #dc2626;
+  --color-risk-high-bg: #fee2e2;
 }

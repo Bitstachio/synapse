@@ -4,7 +4,8 @@ modules:
       resource: main
       resolver:
         function: resolver
-      viewportSize: medium
+      # viewportSize omitted: enables automatic resizing so the panel grows with
+      # content and only the issue page scrolls (no nested scroll in the app)
       title: Synapse
       icon: https://developer.atlassian.com/platform/forge/images/issue-panel-icon.svg
   function:
