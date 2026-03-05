@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from "@nestjs/common
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { CreateFrameworkDto } from "./dto/create-framework.dto";
+import { UpdateFrameworkDto } from "./dto/update-framework.dto";
 import { Framework } from "./schemas/framework.schema";
 
 @Injectable()
@@ -19,6 +20,16 @@ export class FrameworksService {
 
       throw error;
     }
+  }
+
+  async update(id: string, updateFrameworkDto: UpdateFrameworkDto): Promise<Framework> {
+    const updated = await this.frameworkModel
+      .findByIdAndUpdate(id, updateFrameworkDto, { new: true, runValidators: true })
+      .exec();
+
+    if (!updated) throw new NotFoundException("Framework not found");
+
+    return updated;
   }
 
   async findAll(): Promise<Framework[]> {
