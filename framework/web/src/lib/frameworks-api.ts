@@ -4,10 +4,17 @@ import type { Framework } from "@/types/framework";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
 
 type ActiveFrameworkResponse = {
-  data: Framework;
+  data: Framework & { _id: string };
 };
 
-export const getActiveFramework = async (): Promise<Framework> => {
+export type ActiveFramework = {
+  framework: Framework;
+  id: string;
+};
+
+export type FrameworkWritePayload = Pick<Framework, "name" | "version" | "content">;
+
+export const getActiveFramework = async (): Promise<ActiveFramework> => {
   const res = await fetch(`${API_BASE_URL}/api/v1/frameworks/active`, {
     method: "GET",
     headers: {
@@ -21,10 +28,14 @@ export const getActiveFramework = async (): Promise<Framework> => {
   }
 
   const json: ActiveFrameworkResponse = await res.json();
-  return json.data;
+  const { _id, ...rest } = json.data;
+  return {
+    framework: rest,
+    id: _id,
+  };
 };
 
-export const saveFrameworkVersion = async (input: unknown) => {
+export const createFrameworkVersion = async (input: FrameworkWritePayload) => {
   const res = await fetch(`${API_BASE_URL}/api/v1/frameworks`, {
     method: "POST",
     headers: {
@@ -39,3 +50,20 @@ export const saveFrameworkVersion = async (input: unknown) => {
 
   return res.json();
 };
+
+export const updateFrameworkVersion = async (id: string, input: FrameworkWritePayload) => {
+  const res = await fetch(`${API_BASE_URL}/api/v1/frameworks/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update framework");
+  }
+
+  return res.json();
+};
+

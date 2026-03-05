@@ -11,17 +11,42 @@ import SubcategoryView from "../SubcategoryView/SubcategoryView";
 import { EditingTarget } from "./FrameworkTree.types";
 import { shallowCloneFramework } from "./FrameworkTree.utils";
 import { useActiveFramework } from "./useActiveFramework";
+import { ACTIVE_FRAMEWORK_QUERY_KEY } from "./useActiveFramework";
+import { createFrameworkVersion, updateFrameworkVersion, type FrameworkWritePayload } from "@/lib/frameworks-api";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const FrameworkTree = () => {
   const { data, isLoading, error } = useActiveFramework();
   const [framework, setFramework] = useState<Framework | null>(null);
+  const [frameworkId, setFrameworkId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingTarget | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!framework && data) {
-      setFramework(data);
+    if (data) {
+      setFramework(data.framework);
+      setFrameworkId(data.id);
     }
-  }, [data, framework]);
+  }, [data]);
+
+  const toPayload = (fw: Framework): FrameworkWritePayload => ({
+    name: fw.name,
+    version: fw.version,
+    content: fw.content,
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async (next: Framework) => {
+      const payload = toPayload(next);
+      if (frameworkId) {
+        return updateFrameworkVersion(frameworkId, payload);
+      }
+      return createFrameworkVersion(payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ACTIVE_FRAMEWORK_QUERY_KEY });
+    },
+  });
 
   const updateFunction = useCallback(
     (functionIndex: number, payload: Partial<FrameworkFunction>) => {
@@ -31,6 +56,7 @@ export const FrameworkTree = () => {
       if (!fn) return;
       next.content.functions[functionIndex] = { ...fn, ...payload };
       setFramework(next);
+      saveMutation.mutate(next);
       setEditing(null);
     },
     [framework],
@@ -42,6 +68,7 @@ export const FrameworkTree = () => {
       const next = shallowCloneFramework(framework);
       next.content.functions.splice(functionIndex, 1);
       setFramework(next);
+      saveMutation.mutate(next);
       setEditing(null);
     },
     [framework],
@@ -63,6 +90,7 @@ export const FrameworkTree = () => {
       };
       fn.categories.push(newCategory);
       setFramework(next);
+      saveMutation.mutate(next);
       setEditing({
         type: "category",
         functionIndex,
@@ -83,6 +111,7 @@ export const FrameworkTree = () => {
         ...payload,
       };
       setFramework(next);
+      saveMutation.mutate(next);
       setEditing(null);
     },
     [framework],
@@ -94,6 +123,7 @@ export const FrameworkTree = () => {
       const next = shallowCloneFramework(framework);
       next.content.functions[functionIndex].categories.splice(categoryIndex, 1);
       setFramework(next);
+      saveMutation.mutate(next);
       setEditing(null);
     },
     [framework],
@@ -115,6 +145,7 @@ export const FrameworkTree = () => {
       };
       cat.subcategories.push(newSub);
       setFramework(next);
+      saveMutation.mutate(next);
       setEditing({
         type: "subcategory",
         functionIndex,
@@ -136,6 +167,7 @@ export const FrameworkTree = () => {
         ...payload,
       };
       setFramework(next);
+      saveMutation.mutate(next);
       setEditing(null);
     },
     [framework],
@@ -147,6 +179,7 @@ export const FrameworkTree = () => {
       const next = shallowCloneFramework(framework);
       next.content.functions[functionIndex].categories[categoryIndex].subcategories.splice(subcategoryIndex, 1);
       setFramework(next);
+      saveMutation.mutate(next);
       setEditing(null);
     },
     [framework],
