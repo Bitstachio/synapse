@@ -10,31 +10,18 @@ import SubcategoryEdit from "../SubcategoryEdit/SubcategoryEdit";
 import SubcategoryView from "../SubcategoryView/SubcategoryView";
 import { EditingTarget } from "./FrameworkTree.types";
 import { shallowCloneFramework } from "./FrameworkTree.utils";
+import { useActiveFramework } from "./useActiveFramework";
 
 export const FrameworkTree = () => {
+  const { data, isLoading, error } = useActiveFramework();
   const [framework, setFramework] = useState<Framework | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingTarget | null>(null);
 
-  const fetchFramework = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/framework");
-      if (!res.ok) throw new Error("Failed to load framework");
-      const data: Framework = await res.json();
-      setFramework(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load framework");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchFramework();
-  }, [fetchFramework]);
+    if (!framework && data) {
+      setFramework(data);
+    }
+  }, [data, framework]);
 
   const updateFunction = useCallback(
     (functionIndex: number, payload: Partial<FrameworkFunction>) => {
@@ -165,7 +152,7 @@ export const FrameworkTree = () => {
     [framework],
   );
 
-  if (loading) {
+  if (isLoading || !framework) {
     return (
       <div className="flex justify-center py-12">
         <p className="text-zinc-500">Loading framework…</p>
@@ -175,15 +162,17 @@ export const FrameworkTree = () => {
   if (error) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-        <p>{error}</p>
-        <button type="button" onClick={fetchFramework} className="mt-2 text-sm font-medium underline">
-          Retry
-        </button>
+        <p>{error.message}</p>
       </div>
     );
   }
-  if (!framework) {
-    return null;
+
+  if (!framework.content || !Array.isArray(framework.content.functions)) {
+    return (
+      <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-900 dark:border-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-100">
+        <p>Active framework is missing function definitions.</p>
+      </div>
+    );
   }
 
   const isEditingFunction = (i: number) => editing?.type === "function" && editing.functionIndex === i;
