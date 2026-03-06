@@ -1,7 +1,5 @@
+import { fetchWithAuth } from "@/lib/api-client";
 import type { Framework } from "@/types/framework";
-
-// TODO: Remove localhost:3001 once the API is set up
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
 
 type ActiveFrameworkResponse = {
   data: Framework & { _id: string };
@@ -15,11 +13,8 @@ export type ActiveFramework = {
 export type FrameworkWritePayload = Pick<Framework, "name" | "version" | "content">;
 
 export const getActiveFramework = async (): Promise<ActiveFramework> => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/frameworks/active`, {
+  const res = await fetchWithAuth("/api/v1/frameworks/active", {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
     cache: "no-store",
   });
 
@@ -36,12 +31,9 @@ export const getActiveFramework = async (): Promise<ActiveFramework> => {
 };
 
 export const createFrameworkVersion = async (input: FrameworkWritePayload) => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/frameworks`, {
+  const res = await fetchWithAuth("/api/v1/frameworks", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
+    body: input as object,
   });
 
   if (!res.ok) {
@@ -52,12 +44,9 @@ export const createFrameworkVersion = async (input: FrameworkWritePayload) => {
 };
 
 export const updateFrameworkVersion = async (id: string, input: FrameworkWritePayload) => {
-  const res = await fetch(`${API_BASE_URL}/api/v1/frameworks/${id}`, {
+  const res = await fetchWithAuth(`/api/v1/frameworks/${id}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(input),
+    body: input as object,
   });
 
   if (!res.ok) {
@@ -66,4 +55,3 @@ export const updateFrameworkVersion = async (id: string, input: FrameworkWritePa
 
   return res.json();
 };
-

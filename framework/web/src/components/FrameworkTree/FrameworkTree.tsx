@@ -12,11 +12,13 @@ import { EditingTarget } from "./FrameworkTree.types";
 import { shallowCloneFramework } from "./FrameworkTree.utils";
 import { useActiveFramework } from "./useActiveFramework";
 import { ACTIVE_FRAMEWORK_QUERY_KEY } from "./useActiveFramework";
+import { useAuth } from "@/lib/auth-context";
 import { createFrameworkVersion, updateFrameworkVersion, type FrameworkWritePayload } from "@/lib/frameworks-api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const FrameworkTree = () => {
-  const { data, isLoading, error } = useActiveFramework();
+  const { isAuthenticated } = useAuth();
+  const { data, isLoading, error } = useActiveFramework({ enabled: isAuthenticated });
   const [framework, setFramework] = useState<Framework | null>(null);
   const [frameworkId, setFrameworkId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingTarget | null>(null);
