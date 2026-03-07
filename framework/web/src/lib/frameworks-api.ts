@@ -38,6 +38,25 @@ export const getActiveFramework = async (): Promise<ActiveFramework> => {
   };
 };
 
+export const getFrameworkById = async (id: string): Promise<ActiveFramework> => {
+  const res = await fetchWithAuth(`/api/v1/frameworks/${id}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to load framework");
+  }
+
+  const json: ActiveFrameworkResponse = await res.json();
+  const data = json.data ?? json;
+  const { _id, ...rest } = data;
+  return {
+    framework: rest as Framework,
+    id: _id ?? id,
+  };
+};
+
 export const createFrameworkVersion = async (input: FrameworkWritePayload) => {
   const res = await fetchWithAuth("/api/v1/frameworks", {
     method: "POST",
@@ -84,4 +103,41 @@ export const updateFrameworkVersion = async (
   }
 
   return res.json();
+};
+
+export type FrameworkListItem = {
+  _id: string;
+  name: string;
+  version: string;
+  isActive: boolean;
+  updatedAt?: string;
+};
+
+type ListFrameworksResponse = {
+  data: FrameworkListItem[];
+};
+
+export const listFrameworks = async (): Promise<FrameworkListItem[]> => {
+  const res = await fetchWithAuth("/api/v1/frameworks", {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to list frameworks");
+  }
+
+  const json = await res.json();
+  if (Array.isArray(json)) return json as FrameworkListItem[];
+  return (json as ListFrameworksResponse).data ?? [];
+};
+
+export const activateFramework = async (id: string): Promise<void> => {
+  const res = await fetchWithAuth(`/api/v1/frameworks/${id}/activate`, {
+    method: "POST",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to activate framework");
+  }
 };

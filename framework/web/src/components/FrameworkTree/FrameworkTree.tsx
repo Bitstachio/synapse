@@ -10,8 +10,7 @@ import SubcategoryEdit from "../SubcategoryEdit/SubcategoryEdit";
 import SubcategoryView from "../SubcategoryView/SubcategoryView";
 import { EditingTarget } from "./FrameworkTree.types";
 import { shallowCloneFramework } from "./FrameworkTree.utils";
-import { useActiveFramework } from "./useActiveFramework";
-import { ACTIVE_FRAMEWORK_QUERY_KEY } from "./useActiveFramework";
+import { useActiveFramework, useFrameworkById, ACTIVE_FRAMEWORK_QUERY_KEY, frameworkByIdQueryKey } from "./useActiveFramework";
 import { useAuth } from "@/lib/auth-context";
 import {
   createFrameworkVersion,
@@ -21,9 +20,17 @@ import {
 } from "@/lib/frameworks-api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export const FrameworkTree = () => {
+type FrameworkTreeProps = {
+  /** When set, load and edit this framework by ID instead of the active one. */
+  frameworkId?: string | null;
+};
+
+export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreeProps = {}) => {
   const { isAuthenticated } = useAuth();
-  const { data, isLoading, error } = useActiveFramework({ enabled: isAuthenticated });
+  const editById = frameworkIdProp ?? null;
+  const activeQuery = useActiveFramework({ enabled: isAuthenticated && !editById });
+  const byIdQuery = useFrameworkById(editById, { enabled: isAuthenticated && !!editById });
+  const { data, isLoading, error } = editById ? byIdQuery : activeQuery;
   const [framework, setFramework] = useState<Framework | null>(null);
   const [frameworkId, setFrameworkId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingTarget | null>(null);
@@ -63,13 +70,18 @@ export const FrameworkTree = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACTIVE_FRAMEWORK_QUERY_KEY });
+      if (editById) {
+        queryClient.invalidateQueries({ queryKey: frameworkByIdQueryKey(editById) });
+        queryClient.invalidateQueries({ queryKey: ["frameworks", "list"] });
+      }
     },
     onError: (err) => {
       if (err instanceof FrameworkConflictError) {
         setConflictMessage(
           "The framework was modified by someone else. It has been refreshed; please review and submit your changes again.",
         );
-        queryClient.refetchQueries({ queryKey: ACTIVE_FRAMEWORK_QUERY_KEY });
+        const queryKey = editById ? frameworkByIdQueryKey(editById) : ACTIVE_FRAMEWORK_QUERY_KEY;
+        queryClient.refetchQueries({ queryKey });
       }
     },
   });
