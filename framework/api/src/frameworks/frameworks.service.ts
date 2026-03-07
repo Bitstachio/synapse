@@ -67,6 +67,12 @@ export class FrameworksService {
     return active;
   }
 
+  async findOne(id: string): Promise<Framework> {
+    const framework = await this.frameworkModel.findById(id).exec();
+    if (!framework) throw new NotFoundException("Framework not found");
+    return framework;
+  }
+
   async activate(id: string): Promise<Framework> {
     const framework = await this.frameworkModel.findById(id).exec();
     if (!framework) throw new NotFoundException("Framework not found");

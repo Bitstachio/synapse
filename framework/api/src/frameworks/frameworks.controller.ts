@@ -37,6 +37,13 @@ export class FrameworksController {
     return this.frameworksService.findActive();
   }
 
+  @Get(":id")
+  @ApiOperation({ summary: "Get a framework by ID" })
+  @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
+  async findOne(@Param("id") id: string) {
+    return this.frameworksService.findOne(id);
+  }
+
   @Patch(":id")
   @ApiOperation({
     summary: "Update an existing framework including its hierarchical content",
