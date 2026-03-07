@@ -23,11 +23,35 @@ export class FrameworksService {
   }
 
   async update(id: string, updateFrameworkDto: UpdateFrameworkDto): Promise<Framework> {
-    const updated = await this.frameworkModel
-      .findByIdAndUpdate(id, updateFrameworkDto, { new: true, runValidators: true })
-      .exec();
+    const { lastKnownUpdatedAt, ...updatePayload } = updateFrameworkDto as UpdateFrameworkDto & {
+      lastKnownUpdatedAt?: string;
+    };
 
-    if (!updated) throw new NotFoundException("Framework not found");
+    const options = { new: true, runValidators: true } as const;
+
+    let updated: Framework | null;
+
+    if (lastKnownUpdatedAt) {
+      updated = await this.frameworkModel
+        .findOneAndUpdate(
+          { _id: id, updatedAt: new Date(lastKnownUpdatedAt) },
+          updatePayload,
+          options,
+        )
+        .exec();
+      if (!updated) {
+        const current = await this.frameworkModel.findById(id).exec();
+        if (!current) throw new NotFoundException("Framework not found");
+        throw new ConflictException(
+          "The framework was modified by another user. Please refresh and submit again.",
+        );
+      }
+    } else {
+      updated = await this.frameworkModel
+        .findByIdAndUpdate(id, updatePayload, options)
+        .exec();
+      if (!updated) throw new NotFoundException("Framework not found");
+    }
 
     return updated;
   }

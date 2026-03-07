@@ -13,7 +13,12 @@ import { shallowCloneFramework } from "./FrameworkTree.utils";
 import { useActiveFramework } from "./useActiveFramework";
 import { ACTIVE_FRAMEWORK_QUERY_KEY } from "./useActiveFramework";
 import { useAuth } from "@/lib/auth-context";
-import { createFrameworkVersion, updateFrameworkVersion, type FrameworkWritePayload } from "@/lib/frameworks-api";
+import {
+  createFrameworkVersion,
+  FrameworkConflictError,
+  updateFrameworkVersion,
+  type FrameworkWritePayload,
+} from "@/lib/frameworks-api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export const FrameworkTree = () => {
@@ -22,6 +27,7 @@ export const FrameworkTree = () => {
   const [framework, setFramework] = useState<Framework | null>(null);
   const [frameworkId, setFrameworkId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingTarget | null>(null);
+  const [conflictMessage, setConflictMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -38,15 +44,33 @@ export const FrameworkTree = () => {
   });
 
   const saveMutation = useMutation({
-    mutationFn: async (next: Framework) => {
+    mutationFn: async ({
+      next,
+      lastKnownUpdatedAt,
+      id,
+    }: {
+      next: Framework;
+      lastKnownUpdatedAt: string | undefined;
+      id: string | null;
+    }) => {
       const payload = toPayload(next);
-      if (frameworkId) {
-        return updateFrameworkVersion(frameworkId, payload);
+      if (id) {
+        return updateFrameworkVersion(id, payload, {
+          ...(lastKnownUpdatedAt && { lastKnownUpdatedAt }),
+        });
       }
       return createFrameworkVersion(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACTIVE_FRAMEWORK_QUERY_KEY });
+    },
+    onError: (err) => {
+      if (err instanceof FrameworkConflictError) {
+        setConflictMessage(
+          "The framework was modified by someone else. It has been refreshed; please review and submit your changes again.",
+        );
+        queryClient.refetchQueries({ queryKey: ACTIVE_FRAMEWORK_QUERY_KEY });
+      }
     },
   });
 
@@ -58,7 +82,7 @@ export const FrameworkTree = () => {
       if (!fn) return;
       next.content.functions[functionIndex] = { ...fn, ...payload };
       setFramework(next);
-      saveMutation.mutate(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
     [framework],
@@ -70,7 +94,7 @@ export const FrameworkTree = () => {
       const next = shallowCloneFramework(framework);
       next.content.functions.splice(functionIndex, 1);
       setFramework(next);
-      saveMutation.mutate(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
     [framework],
@@ -92,7 +116,7 @@ export const FrameworkTree = () => {
       };
       fn.categories.push(newCategory);
       setFramework(next);
-      saveMutation.mutate(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing({
         type: "category",
         functionIndex,
@@ -113,7 +137,7 @@ export const FrameworkTree = () => {
         ...payload,
       };
       setFramework(next);
-      saveMutation.mutate(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
     [framework],
@@ -125,7 +149,7 @@ export const FrameworkTree = () => {
       const next = shallowCloneFramework(framework);
       next.content.functions[functionIndex].categories.splice(categoryIndex, 1);
       setFramework(next);
-      saveMutation.mutate(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
     [framework],
@@ -147,7 +171,7 @@ export const FrameworkTree = () => {
       };
       cat.subcategories.push(newSub);
       setFramework(next);
-      saveMutation.mutate(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing({
         type: "subcategory",
         functionIndex,
@@ -169,7 +193,7 @@ export const FrameworkTree = () => {
         ...payload,
       };
       setFramework(next);
-      saveMutation.mutate(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
     [framework],
@@ -181,7 +205,7 @@ export const FrameworkTree = () => {
       const next = shallowCloneFramework(framework);
       next.content.functions[functionIndex].categories[categoryIndex].subcategories.splice(subcategoryIndex, 1);
       setFramework(next);
-      saveMutation.mutate(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
     [framework],
@@ -221,6 +245,23 @@ export const FrameworkTree = () => {
 
   return (
     <div className="space-y-6">
+      {conflictMessage && (
+        <div
+          className="fixed top-4 left-4 right-4 z-50 mx-auto flex max-w-4xl items-start justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-lg text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100 sm:left-6 sm:right-6"
+          role="alert"
+        >
+          <p className="text-sm font-medium">{conflictMessage}</p>
+          <button
+            type="button"
+            onClick={() => setConflictMessage(null)}
+            className="shrink-0 rounded p-1 text-amber-700 hover:bg-amber-100 dark:text-amber-200 dark:hover:bg-amber-900/50"
+            aria-label="Dismiss"
+          >
+            <span className="sr-only">Dismiss</span>
+            <span aria-hidden>×</span>
+          </button>
+        </div>
+      )}
       <header className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/50">
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">{framework.name}</h2>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
@@ -231,6 +272,15 @@ export const FrameworkTree = () => {
             </span>
           )}
         </p>
+        {framework.updatedAt && (
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            Last updated:{" "}
+            {new Date(framework.updatedAt).toLocaleString(undefined, {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })}
+          </p>
+        )}
       </header>
 
       <div className="space-y-2">
