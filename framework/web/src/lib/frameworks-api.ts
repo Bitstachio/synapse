@@ -134,7 +134,7 @@ export const listFrameworks = async (): Promise<FrameworkListItem[]> => {
 
 export const activateFramework = async (id: string): Promise<void> => {
   const res = await fetchWithAuth(`/api/v1/frameworks/${id}/activate`, {
-    method: "POST",
+    method: "PATCH",
   });
 
   if (!res.ok) {
