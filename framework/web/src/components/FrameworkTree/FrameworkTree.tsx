@@ -127,7 +127,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     next.content.functions.push(newFunction);
     setFramework(next);
     saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
-    setEditing({ type: "function", functionIndex: next.content.functions.length - 1 });
+    setEditing({ type: "function", functionIndex: next.content.functions.length - 1, isNew: true });
   }, [framework, frameworkId]);
 
   const addCategory = useCallback(
@@ -151,6 +151,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
         type: "category",
         functionIndex,
         categoryIndex: fn.categories.length - 1,
+        isNew: true,
       });
     },
     [framework],
@@ -207,6 +208,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
         functionIndex,
         categoryIndex,
         subcategoryIndex: cat.subcategories.length - 1,
+        isNew: true,
       });
     },
     [framework],
@@ -240,6 +242,35 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     },
     [framework],
   );
+
+  const handleCancel = useCallback(() => {
+    if (!editing || !framework) {
+      setEditing(null);
+      return;
+    }
+    if ("isNew" in editing && editing.isNew) {
+      if (editing.type === "function") {
+        const next = shallowCloneFramework(framework);
+        next.content.functions.splice(editing.functionIndex, 1);
+        setFramework(next);
+        saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      } else if (editing.type === "category") {
+        const next = shallowCloneFramework(framework);
+        next.content.functions[editing.functionIndex].categories.splice(editing.categoryIndex, 1);
+        setFramework(next);
+        saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      } else {
+        const next = shallowCloneFramework(framework);
+        next.content.functions[editing.functionIndex].categories[editing.categoryIndex].subcategories.splice(
+          editing.subcategoryIndex,
+          1,
+        );
+        setFramework(next);
+        saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      }
+    }
+    setEditing(null);
+  }, [editing, framework, frameworkId]);
 
   if (isLoading || !framework) {
     return (
@@ -341,7 +372,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                 <FunctionEdit
                   function={fn}
                   onSave={(payload) => updateFunction(functionIndex, payload)}
-                  onCancel={() => setEditing(null)}
+                  onCancel={handleCancel}
                   onDelete={() => deleteFunction(functionIndex)}
                 />
               ) : (
@@ -356,7 +387,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                           <CategoryEdit
                             category={cat}
                             onSave={(payload) => updateCategory(functionIndex, categoryIndex, payload)}
-                            onCancel={() => setEditing(null)}
+                            onCancel={handleCancel}
                             onDelete={() => deleteCategory(functionIndex, categoryIndex)}
                           />
                         ) : (
@@ -379,7 +410,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                                       onSave={(payload) =>
                                         updateSubcategory(functionIndex, categoryIndex, subcategoryIndex, payload)
                                       }
-                                      onCancel={() => setEditing(null)}
+                                      onCancel={handleCancel}
                                       onDelete={() => deleteSubcategory(functionIndex, categoryIndex, subcategoryIndex)}
                                     />
                                   ) : (
