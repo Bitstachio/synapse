@@ -3,16 +3,42 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { CreateFrameworkDto } from "./dto/create-framework.dto";
 import { UpdateFrameworkDto } from "./dto/update-framework.dto";
+import { FrameworkRevisionsService } from "./framework-revisions.service";
 import { Framework } from "./schemas/framework.schema";
+import type { RequestUser } from "../auth/decorators/user.decorator";
 
 @Injectable()
 export class FrameworksService {
-  constructor(@InjectModel(Framework.name) private frameworkModel: Model<Framework>) {}
+  constructor(
+    @InjectModel(Framework.name) private frameworkModel: Model<Framework>,
+    private revisionsService: FrameworkRevisionsService,
+  ) {}
 
-  async create(createFrameworkDto: CreateFrameworkDto): Promise<Framework> {
+  private async recordRevision(
+    action: "created" | "updated" | "deleted" | "activated",
+    framework: { _id: unknown; name: string; version: string },
+    userId: string,
+  ): Promise<void> {
+    await this.revisionsService.record({
+      action,
+      frameworkId: String(framework._id),
+      frameworkName: framework.name,
+      frameworkVersion: framework.version,
+      userId,
+    });
+  }
+
+  async create(
+    createFrameworkDto: CreateFrameworkDto,
+    user?: RequestUser,
+  ): Promise<Framework> {
     try {
       const newFramework = new this.frameworkModel(createFrameworkDto);
-      return await newFramework.save();
+      const saved = await newFramework.save();
+      if (user?.sub) {
+        await this.recordRevision("created", saved, user.sub);
+      }
+      return saved;
     } catch (error) {
       // Handle MongoDB unique constraint error (e.g., duplicate version)
       if (error.code === 11000)
@@ -22,7 +48,11 @@ export class FrameworksService {
     }
   }
 
-  async update(id: string, updateFrameworkDto: UpdateFrameworkDto): Promise<Framework> {
+  async update(
+    id: string,
+    updateFrameworkDto: UpdateFrameworkDto,
+    user?: RequestUser,
+  ): Promise<Framework> {
     const { lastKnownUpdatedAt, ...updatePayload } = updateFrameworkDto as UpdateFrameworkDto & {
       lastKnownUpdatedAt?: string;
     };
@@ -52,7 +82,9 @@ export class FrameworksService {
         .exec();
       if (!updated) throw new NotFoundException("Framework not found");
     }
-
+    if (user?.sub) {
+      await this.recordRevision("updated", updated, user.sub);
+    }
     return updated;
   }
 
@@ -73,20 +105,35 @@ export class FrameworksService {
     return framework;
   }
 
-  async activate(id: string): Promise<Framework> {
+  async activate(id: string, user?: RequestUser): Promise<Framework> {
     const framework = await this.frameworkModel.findById(id).exec();
     if (!framework) throw new NotFoundException("Framework not found");
 
     await this.frameworkModel.updateMany({ _id: { $ne: id } }, { $set: { isActive: false } }).exec();
     framework.isActive = true;
-
-    return await framework.save();
+    const saved = await framework.save();
+    if (user?.sub) {
+      await this.recordRevision("activated", saved, user.sub);
+    }
+    return saved;
   }
 
-  async remove(id: string): Promise<any> {
+  async remove(id: string, user?: RequestUser): Promise<{ deleted: true }> {
+    const framework = await this.frameworkModel.findById(id).exec();
+    if (!framework) throw new NotFoundException("Framework not found");
+    const name = framework.name;
+    const version = framework.version;
     const result = await this.frameworkModel.findByIdAndDelete(id).exec();
     if (!result) throw new NotFoundException("Framework not found");
-
+    if (user?.sub) {
+      await this.revisionsService.record({
+        action: "deleted",
+        frameworkId: id,
+        frameworkName: name,
+        frameworkVersion: version,
+        userId: user.sub,
+      });
+    }
     return { deleted: true };
   }
 }
