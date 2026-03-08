@@ -352,15 +352,15 @@ export default function FrameworkRevisionsPage() {
                   No revisions found. Try adjusting the filters.
                 </div>
               ) : (
-                <table className="w-full min-w-[600px] text-left text-sm">
+                <table className="w-full min-w-[600px] table-fixed text-left text-sm">
                   <thead>
                     <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50">
-                      <th className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Action</th>
-                      <th className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Date & time</th>
-                      <th className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">User ID</th>
-                      <th className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Framework</th>
-                      <th className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Version</th>
-                      <th className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Changes</th>
+                      <th className="w-[10%] px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Action</th>
+                      <th className="w-[20%] px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Date & time</th>
+                      <th className="w-[20%] px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">User ID</th>
+                      <th className="w-[25%] px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Framework</th>
+                      <th className="w-[10%] px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Version</th>
+                      <th className="w-[15%] px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Changes</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -381,19 +381,20 @@ export default function FrameworkRevisionsPage() {
                             {formatAction(rev.action)}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
+                        <td className="px-4 py-3 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
                           {formatDateTime(rev.performedAt)}
                         </td>
                         <td
-                          className="max-w-[180px] truncate px-4 py-3 font-mono text-xs text-zinc-600 dark:text-zinc-400"
+                          className="min-w-0 truncate px-4 py-3 font-mono text-xs text-zinc-600 dark:text-zinc-400"
                           title={rev.userId}
                         >
                           {rev.userId}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="min-w-0 px-4 py-3">
                           <Link
                             href={`/frameworks/${rev.frameworkId}`}
-                            className="text-zinc-900 underline hover:no-underline dark:text-zinc-100"
+                            className="block truncate text-zinc-900 underline hover:no-underline dark:text-zinc-100"
+                            title={rev.frameworkName}
                           >
                             {rev.frameworkName}
                           </Link>

@@ -11,18 +11,26 @@ import { ACTIVE_FRAMEWORK_QUERY_KEY } from "@/components/FrameworkTree/useActive
 const FRAMEWORKS_LIST_QUERY_KEY = ["frameworks", "list"] as const;
 
 type SortOption = "name" | "dateModified";
+type SortDirection = "asc" | "desc";
 
 const emptyContent = { functions: [] };
 
-function sortFrameworks(frameworks: FrameworkListItem[], sortBy: SortOption): FrameworkListItem[] {
+function sortFrameworks(
+  frameworks: FrameworkListItem[],
+  sortBy: SortOption,
+  direction: SortDirection,
+): FrameworkListItem[] {
   const copy = [...frameworks];
+  const mult = direction === "asc" ? 1 : -1;
   if (sortBy === "name") {
-    copy.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    copy.sort(
+      (a, b) => mult * a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+    );
   } else {
     copy.sort((a, b) => {
       const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
       const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-      return bTime - aTime;
+      return mult * (aTime - bTime);
     });
   }
   return copy;
@@ -35,6 +43,7 @@ export default function FrameworksPage() {
   const [createName, setCreateName] = useState("");
   const [createVersion, setCreateVersion] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("dateModified");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const {
     data: frameworks = [],
@@ -67,7 +76,10 @@ export default function FrameworksPage() {
     });
   };
 
-  const sortedFrameworks = useMemo(() => sortFrameworks(frameworks, sortBy), [frameworks, sortBy]);
+  const sortedFrameworks = useMemo(
+    () => sortFrameworks(frameworks, sortBy, sortDirection),
+    [frameworks, sortBy, sortDirection],
+  );
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-zinc-950">
@@ -149,7 +161,7 @@ export default function FrameworksPage() {
             )}
           </div>
           {!isLoading && !error && frameworks.length > 0 && (
-            <div className="flex shrink-0 items-center gap-3">
+            <div className="flex shrink-0 flex-wrap items-center gap-3">
               <span className="text-sm text-zinc-600 dark:text-zinc-400">Sort by</span>
               <select
                 value={sortBy}
@@ -157,7 +169,15 @@ export default function FrameworksPage() {
                 className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
               >
                 <option value="dateModified">Date modified</option>
-                <option value="name">Name (A–Z)</option>
+                <option value="name">Name</option>
+              </select>
+              <select
+                value={sortDirection}
+                onChange={(e) => setSortDirection(e.target.value as SortDirection)}
+                className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
               </select>
             </div>
           )}
@@ -205,8 +225,11 @@ function FrameworkRow({ framework }: { framework: FrameworkListItem }) {
     : null;
 
   return (
-    <li className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-700 dark:bg-zinc-900/30">
-      <Link href={`/frameworks/${framework._id}`} className="min-w-0 flex-1 hover:opacity-90">
+    <li>
+      <Link
+        href={`/frameworks/${framework._id}`}
+        className="block rounded-lg border border-zinc-200 bg-white p-4 transition-opacity hover:opacity-90 dark:border-zinc-700 dark:bg-zinc-900/30"
+      >
         <div className="flex items-center gap-2">
           <span className="font-medium text-zinc-900 dark:text-zinc-100">{framework.name}</span>
           {framework.isActive && (
