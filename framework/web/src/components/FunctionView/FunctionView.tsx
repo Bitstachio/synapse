@@ -29,7 +29,7 @@ const FunctionView = ({ function: fn, onEdit, onAddCategory, renderCategories }:
             onClick={onAddCategory}
             className="rounded border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
           >
-            Add category
+            Add subcategory
           </button>
         </div>
       </div>

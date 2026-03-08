@@ -120,7 +120,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     while (existingIds.includes("F" + num)) num++;
     const newFunction: FrameworkFunction = {
       id: "F" + num,
-      name: "New function",
+      name: "New category",
       description: "",
       categories: [],
     };
@@ -141,7 +141,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
       while (existingIds.includes(prefix + "C" + num)) num++;
       const newCategory: Category = {
         id: prefix + "C" + num,
-        name: "New category",
+        name: "New subcategory",
         subcategories: [],
       };
       fn.categories.push(newCategory);
@@ -196,7 +196,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
       while (existingIds.includes(prefix + num)) num++;
       const newSub: Subcategory = {
         id: prefix + num,
-        description: "New subcategory description",
+        description: "New instruction description",
         risk_level: "Medium",
       };
       cat.subcategories.push(newSub);
@@ -259,7 +259,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
   if (!framework.content || !Array.isArray(framework.content.functions)) {
     return (
       <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-900 dark:border-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-100">
-        <p>Active framework is missing function definitions.</p>
+        <p>Active framework is missing category definitions.</p>
       </div>
     );
   }
@@ -314,11 +314,11 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
       </header>
 
       <div className="space-y-2">
-        <h3 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Functions</h3>
+        <h3 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Categories</h3>
         {framework.content.functions.length === 0 ? (
           <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50/50 p-8 text-center dark:border-zinc-600 dark:bg-zinc-900/30">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              No functions yet. Add your first function to define categories and subcategories.
+              No categories yet. Add your first category to define subcategories and instructions.
             </p>
             <button
               type="button"
@@ -326,7 +326,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
               disabled={saveMutation.isPending}
               className="mt-4 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             >
-              Add first function
+              Add first category
             </button>
           </div>
         ) : (
@@ -414,7 +414,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
           disabled={saveMutation.isPending}
           className="mt-3 w-full rounded-lg border border-dashed border-zinc-300 py-3 text-sm font-medium text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100"
         >
-          + Add function
+          + Add category
         </button>
           </>
         )}
