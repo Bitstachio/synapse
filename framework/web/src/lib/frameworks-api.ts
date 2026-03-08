@@ -141,3 +141,13 @@ export const activateFramework = async (id: string): Promise<void> => {
     throw new Error("Failed to activate framework");
   }
 };
+
+export const deleteFramework = async (id: string): Promise<void> => {
+  const res = await fetchWithAuth(`/api/v1/frameworks/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete framework");
+  }
+};

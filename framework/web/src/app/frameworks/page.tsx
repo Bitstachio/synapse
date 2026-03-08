@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  activateFramework,
-  createFrameworkVersion,
-  listFrameworks,
-  type FrameworkListItem,
-} from "@/lib/frameworks-api";
+import { createFrameworkVersion, listFrameworks, type FrameworkListItem } from "@/lib/frameworks-api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,17 +35,13 @@ export default function FrameworksPage() {
   const [createVersion, setCreateVersion] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("dateModified");
 
-  const { data: frameworks = [], isLoading, error } = useQuery({
+  const {
+    data: frameworks = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: FRAMEWORKS_LIST_QUERY_KEY,
     queryFn: listFrameworks,
-  });
-
-  const activateMutation = useMutation({
-    mutationFn: activateFramework,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: FRAMEWORKS_LIST_QUERY_KEY });
-      queryClient.invalidateQueries({ queryKey: ACTIVE_FRAMEWORK_QUERY_KEY });
-    },
   });
 
   const createMutation = useMutation({
@@ -65,10 +56,6 @@ export default function FrameworksPage() {
       if (id) router.push(`/frameworks/${id}`);
     },
   });
-
-  const handleActivate = (id: string) => {
-    activateMutation.mutate(id);
-  };
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,17 +72,12 @@ export default function FrameworksPage() {
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-zinc-950">
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <nav className="mb-6 text-sm">
-          <Link
-            href="/"
-            className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-          >
+          <Link href="/" className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
             ← Back to active framework
           </Link>
         </nav>
 
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-          Manage frameworks
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">Manage frameworks</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Create new frameworks, edit any iteration, or set which one is active.
         </p>
@@ -107,9 +89,7 @@ export default function FrameworksPage() {
                 onSubmit={handleCreateSubmit}
                 className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/30"
               >
-                <h2 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                  New framework
-                </h2>
+                <h2 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">New framework</h2>
                 <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
                   <div className="min-w-0 flex-1">
                     <label htmlFor="create-name" className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -126,7 +106,10 @@ export default function FrameworksPage() {
                     />
                   </div>
                   <div className="w-32">
-                    <label htmlFor="create-version" className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    <label
+                      htmlFor="create-version"
+                      className="block text-xs font-medium text-zinc-500 dark:text-zinc-400"
+                    >
                       Version
                     </label>
                     <input
@@ -157,9 +140,7 @@ export default function FrameworksPage() {
                   </div>
                 </div>
                 {createMutation.isError && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                    {createMutation.error.message}
-                  </p>
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{createMutation.error.message}</p>
                 )}
               </form>
             ) : (
@@ -208,19 +189,10 @@ export default function FrameworksPage() {
         {!isLoading && !error && frameworks.length > 0 && (
           <>
             <ul className="mt-8 space-y-3">
-            {sortedFrameworks.map((fw) => (
-              <FrameworkRow
-                key={fw._id}
-                framework={fw}
-                onActivate={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleActivate(fw._id);
-                }}
-                isActivating={activateMutation.isPending && activateMutation.variables === fw._id}
-              />
-            ))}
-          </ul>
+              {sortedFrameworks.map((fw) => (
+                <FrameworkRow key={fw._id} framework={fw} />
+              ))}
+            </ul>
           </>
         )}
       </main>
@@ -228,15 +200,7 @@ export default function FrameworksPage() {
   );
 }
 
-function FrameworkRow({
-  framework,
-  onActivate,
-  isActivating,
-}: {
-  framework: FrameworkListItem;
-  onActivate: (e: React.MouseEvent) => void;
-  isActivating: boolean;
-}) {
+function FrameworkRow({ framework }: { framework: FrameworkListItem }) {
   const updatedAtLabel = framework.updatedAt
     ? new Date(framework.updatedAt).toLocaleString(undefined, {
         dateStyle: "medium",
@@ -245,11 +209,8 @@ function FrameworkRow({
     : null;
 
   return (
-    <li className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/30 sm:flex-row sm:items-center sm:justify-between">
-      <Link
-        href={`/frameworks/${framework._id}`}
-        className="min-w-0 flex-1 hover:opacity-90"
-      >
+    <li className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:border-zinc-700 dark:bg-zinc-900/30">
+      <Link href={`/frameworks/${framework._id}`} className="min-w-0 flex-1 hover:opacity-90">
         <div className="flex items-center gap-2">
           <span className="font-medium text-zinc-900 dark:text-zinc-100">{framework.name}</span>
           {framework.isActive && (
@@ -260,25 +221,9 @@ function FrameworkRow({
         </div>
         <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
           Version {framework.version}
-          {updatedAtLabel && (
-            <span className="ml-2 text-zinc-500">· Updated {updatedAtLabel}</span>
-          )}
+          {updatedAtLabel && <span className="ml-2 text-zinc-500">· Updated {updatedAtLabel}</span>}
         </p>
       </Link>
-      <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
-        {framework.isActive ? (
-          <span className="text-sm text-zinc-500 dark:text-zinc-400">Current active</span>
-        ) : (
-          <button
-            type="button"
-            onClick={onActivate}
-            disabled={isActivating}
-            className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-          >
-            {isActivating ? "Activating…" : "Activate"}
-          </button>
-        )}
-      </div>
     </li>
   );
 }
