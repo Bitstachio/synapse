@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -23,32 +24,45 @@ function isActive(pathname: string, href: string): boolean {
 
 export function AppNav() {
   const pathname = usePathname();
+  const { logout } = useAuth();
 
   if (pathname === "/login") return null;
 
   return (
     <div className="px-4 pt-6 pb-2 sm:px-6 lg:px-8" role="banner">
-      <nav
-        className="mx-auto flex w-fit items-center gap-0.5 rounded-full border border-zinc-200/80 bg-white/80 px-1.5 py-1 shadow-sm backdrop-blur-sm dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:shadow-zinc-950/50"
-        aria-label="Main navigation"
-      >
-        {navItems.map(({ href, label }) => {
-          const active = isActive(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                active
-                  ? "bg-zinc-200/90 text-zinc-900 dark:bg-zinc-700/90 dark:text-zinc-100"
-                  : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-              }`}
-            >
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="mx-auto flex max-w-5xl items-center">
+        <div className="flex-1" aria-hidden="true" />
+        <nav
+          className="flex w-fit items-center gap-0.5 rounded-full border border-zinc-200/80 bg-white/80 px-1.5 py-1 shadow-sm backdrop-blur-sm dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:shadow-zinc-950/50"
+          aria-label="Main navigation"
+        >
+          {navItems.map(({ href, label }) => {
+            const active = isActive(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-zinc-200/90 text-zinc-900 dark:bg-zinc-700/90 dark:text-zinc-100"
+                    : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="flex flex-1 justify-end">
+          <button
+            type="button"
+            onClick={() => logout()}
+            className="rounded-full border border-zinc-200/80 bg-white/80 px-4 py-2 text-sm font-medium text-zinc-600 shadow-sm backdrop-blur-sm hover:text-zinc-900 dark:border-zinc-700/80 dark:bg-zinc-900/80 dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            Log out
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

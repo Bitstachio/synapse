@@ -39,3 +39,11 @@ export const loginWithEmailPassword = async (credentials: LoginCredentials): Pro
 
   return { token };
 };
+
+/** Notify the backend that the user is logging out (no auth header or body). Call before clearing the token. */
+export const callLogoutEndpoint = async (): Promise<void> => {
+  await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
+    method: "POST",
+  });
+  // Ignore errors: we still clear the token and redirect; backend is best-effort for analytics.
+};

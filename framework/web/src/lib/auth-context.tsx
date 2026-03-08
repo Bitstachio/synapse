@@ -2,7 +2,7 @@
 
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginWithEmailPassword } from "@/lib/auth-api";
+import { callLogoutEndpoint, loginWithEmailPassword } from "@/lib/auth-api";
 import {
   AUTH_LOGOUT_EVENT,
   clearStoredToken,
@@ -61,7 +61,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     router.push("/");
   }, [router]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await callLogoutEndpoint();
+    } catch {
+      // Ignore: still clear token and redirect
+    }
     clearStoredToken();
     setState((s) => ({ ...s, token: null }));
     router.push("/login");

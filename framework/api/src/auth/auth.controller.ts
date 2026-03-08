@@ -14,4 +14,14 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto): Promise<Auth0TokenResponse> {
     return this.authService.login(loginDto);
   }
+
+  @Post("logout")
+  @ApiOperation({
+    summary: "Log out",
+    description:
+      "Acknowledges logout. The client should clear the stored access token after calling this. The token remains valid until it expires unless revoked elsewhere.",
+  })
+  async logout(): Promise<{ ok: true }> {
+    return { ok: true };
+  }
 }
