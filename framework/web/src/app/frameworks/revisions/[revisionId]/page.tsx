@@ -1,14 +1,11 @@
 "use client";
 
-import {
-  getRevisionById,
-  type RevisionDetail,
-  type RevisionDiffOp,
-} from "@/lib/frameworks-api";
+import { getRevisionById, type RevisionDetail, type RevisionDiffOp } from "@/lib/frameworks-api";
 import type { FrameworkContent } from "@/types/framework";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useState } from "react";
 
 const REVISION_DETAIL_QUERY_KEY = ["frameworks", "revision"] as const;
 
@@ -92,6 +89,251 @@ function getDisplayableDiff(diff: RevisionDiffOp[] | undefined): RevisionDiffOp[
   return diff.filter((op) => op.op !== "test");
 }
 
+/** Path up to and including the item (e.g. /functions/0/categories/0/subcategories/3 for an instruction) */
+function getItemPath(path: string): string {
+  const segments = path.split("/").filter(Boolean);
+  const subIdx = segments.indexOf("subcategories");
+  if (subIdx >= 0 && segments[subIdx + 1] !== undefined) {
+    return "/" + segments.slice(0, subIdx + 2).join("/");
+  }
+  const catIdx = segments.indexOf("categories");
+  if (catIdx >= 0 && segments[catIdx + 1] !== undefined) {
+    return "/" + segments.slice(0, catIdx + 2).join("/");
+  }
+  const funcIdx = segments.indexOf("functions");
+  if (funcIdx >= 0 && segments[funcIdx + 1] !== undefined) {
+    return "/" + segments.slice(0, funcIdx + 2).join("/");
+  }
+  return path;
+}
+
+/** Group displayable ops by item path for in-context view */
+function groupOpsByItemPath(ops: RevisionDiffOp[]): Map<string, RevisionDiffOp[]> {
+  const map = new Map<string, RevisionDiffOp[]>();
+  for (const op of ops) {
+    const key = getItemPath(op.path);
+    const list = map.get(key) ?? [];
+    list.push(op);
+    map.set(key, list);
+  }
+  return map;
+}
+
+/** Single change card (before/after, removed, or added) - reused in list and in-context views */
+function ChangeCard({
+  revision,
+  op,
+  contentForLabel,
+  showLocationLabel = true,
+}: {
+  revision: RevisionDetail;
+  op: RevisionDiffOp;
+  contentForLabel: FrameworkContent | undefined;
+  showLocationLabel?: boolean;
+}) {
+  const contentForLocation = op.op === "remove" ? revision.previousContent : contentForLabel;
+  const locationLabel = getLocationLabel(contentForLocation, op.path);
+  const isReplace = op.op === "replace";
+  const isAdd = op.op === "add";
+  const isRemove = op.op === "remove";
+  let oldValue: unknown = undefined;
+  let removedValue: unknown = undefined;
+  if (revision.previousContent) {
+    try {
+      if (isReplace) oldValue = getValueAtPath(revision.previousContent, op.path);
+      else if (isRemove) removedValue = getValueAtPath(revision.previousContent, op.path);
+    } catch {
+      // ignore
+    }
+  }
+  const removedSub =
+    removedValue &&
+    typeof removedValue === "object" &&
+    removedValue !== null &&
+    "id" in removedValue &&
+    "description" in removedValue
+      ? (removedValue as { id: string; description: string; risk_level?: string })
+      : null;
+
+  return (
+    <div
+      className={
+        showLocationLabel
+          ? ""
+          : "rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-800/50 dark:bg-amber-950/20"
+      }
+    >
+      {showLocationLabel && (
+        <p className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">{locationLabel}</p>
+      )}
+      {isReplace && (
+        <div className="space-y-2 text-sm">
+          <div>
+            <span className="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Before</span>
+            <div className="mt-0.5 rounded border border-red-200 bg-red-50/50 px-3 py-2 text-zinc-800 dark:border-red-900/50 dark:bg-red-950/20 dark:text-zinc-200">
+              {typeof oldValue === "string" ? oldValue : JSON.stringify(oldValue ?? "—")}
+            </div>
+          </div>
+          <div>
+            <span className="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">After</span>
+            <div className="mt-0.5 rounded border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-zinc-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-zinc-200">
+              {typeof op.value === "string" ? op.value : JSON.stringify(op.value ?? "—")}
+            </div>
+          </div>
+        </div>
+      )}
+      {isAdd && (
+        <div className="rounded border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-sm text-zinc-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-zinc-200">
+          <span className="text-xs font-medium text-emerald-700 uppercase dark:text-emerald-400">Added</span>
+          {" — "}
+          {typeof op.value === "string" ? op.value : JSON.stringify(op.value ?? "")}
+        </div>
+      )}
+      {isRemove && (
+        <div className="space-y-2 text-sm">
+          <div>
+            <span className="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">
+              Removed
+            </span>
+            <div className="mt-0.5 rounded border border-red-200 bg-red-50/50 px-3 py-2 text-zinc-800 dark:border-red-900/50 dark:bg-red-950/20 dark:text-zinc-200">
+              {removedSub ? (
+                <div className="space-y-1">
+                  <p>{removedSub.description}</p>
+                  {removedSub.risk_level && (
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400">Risk level: {removedSub.risk_level}</p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {typeof removedValue === "string"
+                    ? removedValue
+                    : removedValue !== undefined
+                      ? JSON.stringify(removedValue)
+                      : "—"}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {!isReplace && !isAdd && !isRemove && (
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <span className="font-medium">{op.op}</span>
+          {op.value !== undefined && `: ${typeof op.value === "string" ? op.value : JSON.stringify(op.value)}`}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Full framework tree with change cards in place of changed items */
+function RevisionContextView({
+  revision,
+  contentForLabel,
+  displayableOps,
+}: {
+  revision: RevisionDetail;
+  contentForLabel: FrameworkContent | undefined;
+  displayableOps: RevisionDiffOp[];
+}) {
+  const prev = revision.previousContent;
+  const next = revision.newContent;
+  const opsByItemPath = groupOpsByItemPath(displayableOps);
+
+  if (!prev?.functions?.length) {
+    return <p className="text-sm text-zinc-500 dark:text-zinc-400">No framework content to show in context.</p>;
+  }
+
+  return (
+    <div className="space-y-6 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/30">
+      {prev.functions.map((fn, fi) => {
+        const functionPath = `/functions/${fi}`;
+        const functionOps = opsByItemPath.get(functionPath) ?? [];
+
+        return (
+        <section key={fn.id ?? fi} className="space-y-3">
+          <div>
+            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">{fn.name}</h3>
+            {fn.description && functionOps.length === 0 && (
+              <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{fn.description}</p>
+            )}
+          </div>
+          {functionOps.length > 0 && (
+            <div className="space-y-2">
+              {functionOps.map((op, oi) => (
+                <ChangeCard
+                  key={`${op.path}-${oi}`}
+                  revision={revision}
+                  op={op}
+                  contentForLabel={contentForLabel}
+                  showLocationLabel={false}
+                />
+              ))}
+            </div>
+          )}
+          <div className="ml-4 space-y-4 border-l-2 border-zinc-200 pl-4 dark:border-zinc-700">
+            {(fn.categories ?? []).map((cat, ci) => {
+              const prevSubs = cat.subcategories ?? [];
+              const nextSubs = next?.functions?.[fi]?.categories?.[ci]?.subcategories ?? [];
+              const maxLen = Math.max(prevSubs.length, nextSubs.length);
+
+              return (
+                <div key={cat.id ?? ci} className="space-y-2">
+                  <h4 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{cat.name}</h4>
+                  <ul className="space-y-2">
+                    {Array.from({ length: maxLen }, (_, si) => {
+                      const path = `/functions/${fi}/categories/${ci}/subcategories/${si}`;
+                      const ops = opsByItemPath.get(path) ?? [];
+                      const prevSub = prevSubs[si];
+                      const nextSub = nextSubs[si];
+                      const instruction = nextSub ?? prevSub;
+
+                      if (ops.length > 0) {
+                        return (
+                          <li key={path}>
+                            <div className="space-y-2">
+                              {ops.map((op, oi) => (
+                                <ChangeCard
+                                  key={`${op.path}-${oi}`}
+                                  revision={revision}
+                                  op={op}
+                                  contentForLabel={contentForLabel}
+                                  showLocationLabel={false}
+                                />
+                              ))}
+                            </div>
+                          </li>
+                        );
+                      }
+
+                      if (!instruction) return null;
+
+                      return (
+                        <li
+                          key={path}
+                          className="rounded-md border border-zinc-100 bg-zinc-50/50 px-3 py-2 text-sm dark:border-zinc-700/50 dark:bg-zinc-800/30"
+                        >
+                          <p className="text-zinc-800 dark:text-zinc-200">{instruction.description}</p>
+                          {instruction.risk_level && (
+                            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                              Risk level: {instruction.risk_level}
+                            </p>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function RevisionDiffPage() {
   const params = useParams();
   const revisionId = typeof params.revisionId === "string" ? params.revisionId : null;
@@ -105,6 +347,7 @@ export default function RevisionDiffPage() {
   const revision: RevisionDetail | undefined = data?.data;
   const hasDiff = revision?.diff && getDisplayableDiff(revision.diff).length > 0;
   const contentForLabel = revision?.newContent ?? revision?.previousContent;
+  const [viewMode, setViewMode] = useState<"list" | "context">("list");
 
   if (!revisionId) {
     return (
@@ -201,108 +444,65 @@ export default function RevisionDiffPage() {
           </div>
         ) : (
           <div className="mt-6">
-            <h2 className="mb-3 text-lg font-medium text-zinc-900 dark:text-zinc-100">Changes</h2>
-            <ul className="space-y-4">
-              {displayableOps.map((op, idx) => {
-                const contentForLocation =
-                  op.op === "remove" ? revision.previousContent : contentForLabel;
-                const locationLabel = getLocationLabel(contentForLocation, op.path);
-                const isReplace = op.op === "replace";
-                const isAdd = op.op === "add";
-                const isRemove = op.op === "remove";
-                let oldValue: unknown = undefined;
-                let removedValue: unknown = undefined;
-                if (revision.previousContent) {
-                  try {
-                    if (isReplace) {
-                      oldValue = getValueAtPath(revision.previousContent, op.path);
-                    } else if (isRemove) {
-                      removedValue = getValueAtPath(revision.previousContent, op.path);
-                    }
-                  } catch {
-                    // ignore
-                  }
-                }
-                const removedSub = removedValue &&
-                  typeof removedValue === "object" &&
-                  removedValue !== null &&
-                  "id" in removedValue &&
-                  "description" in removedValue
-                  ? (removedValue as { id: string; description: string; risk_level?: string })
-                  : null;
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">Changes</h2>
+              <div
+                className="inline-flex rounded-lg border border-zinc-200 bg-zinc-100/50 p-0.5 dark:border-zinc-700 dark:bg-zinc-800/50"
+                role="tablist"
+                aria-label="Change view"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={viewMode === "list"}
+                  onClick={() => setViewMode("list")}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    viewMode === "list"
+                      ? "bg-white text-zinc-900 shadow dark:bg-zinc-700 dark:text-zinc-100"
+                      : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  }`}
+                >
+                  List
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={viewMode === "context"}
+                  onClick={() => setViewMode("context")}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    viewMode === "context"
+                      ? "bg-white text-zinc-900 shadow dark:bg-zinc-700 dark:text-zinc-100"
+                      : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  }`}
+                >
+                  In Context
+                </button>
+              </div>
+            </div>
 
-                return (
+            {viewMode === "list" ? (
+              <ul className="space-y-4">
+                {displayableOps.map((op, idx) => (
                   <li
                     key={`${op.path}-${idx}`}
                     className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/30"
                   >
-                    <p className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">{locationLabel}</p>
-                    {isReplace && (
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                            Before
-                          </span>
-                          <div className="mt-0.5 rounded border border-red-200 bg-red-50/50 px-3 py-2 text-zinc-800 dark:border-red-900/50 dark:bg-red-950/20 dark:text-zinc-200">
-                            {typeof oldValue === "string" ? oldValue : JSON.stringify(oldValue ?? "—")}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                            After
-                          </span>
-                          <div className="mt-0.5 rounded border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-zinc-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-zinc-200">
-                            {typeof op.value === "string" ? op.value : JSON.stringify(op.value ?? "—")}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {isAdd && (
-                      <div className="rounded border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-sm text-zinc-800 dark:border-emerald-900/50 dark:bg-emerald-950/20 dark:text-zinc-200">
-                        <span className="text-xs font-medium uppercase text-emerald-700 dark:text-emerald-400">Added</span>
-                        {" — "}
-                        {typeof op.value === "string" ? op.value : JSON.stringify(op.value ?? "")}
-                      </div>
-                    )}
-                    {isRemove && (
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                            Removed
-                          </span>
-                          <div className="mt-0.5 rounded border border-red-200 bg-red-50/50 px-3 py-2 text-zinc-800 dark:border-red-900/50 dark:bg-red-950/20 dark:text-zinc-200">
-                            {removedSub ? (
-                              <div className="space-y-1">
-                                <p>{removedSub.description}</p>
-                                {removedSub.risk_level && (
-                                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                                    Risk level: {removedSub.risk_level}
-                                  </p>
-                                )}
-                              </div>
-                            ) : (
-                              <>
-                                {typeof removedValue === "string"
-                                  ? removedValue
-                                  : removedValue !== undefined
-                                    ? JSON.stringify(removedValue)
-                                    : "—"}
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    {!isReplace && !isAdd && !isRemove && (
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        <span className="font-medium">{op.op}</span>
-                        {op.value !== undefined && `: ${typeof op.value === "string" ? op.value : JSON.stringify(op.value)}`}
-                      </p>
-                    )}
+                    <ChangeCard
+                      revision={revision}
+                      op={op}
+                      contentForLabel={contentForLabel}
+                      showLocationLabel={true}
+                    />
                   </li>
-                );
-              })}
-            </ul>
+                ))}
+              </ul>
+            ) : (
+              <RevisionContextView
+                revision={revision}
+                contentForLabel={contentForLabel}
+                displayableOps={displayableOps}
+              />
+            )}
           </div>
         )}
       </main>
