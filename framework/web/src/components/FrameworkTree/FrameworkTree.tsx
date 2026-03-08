@@ -112,6 +112,24 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     [framework],
   );
 
+  const addFunction = useCallback(() => {
+    if (!framework) return;
+    const next = shallowCloneFramework(framework);
+    const existingIds = next.content.functions.map((f) => f.id);
+    let num = 1;
+    while (existingIds.includes("F" + num)) num++;
+    const newFunction: FrameworkFunction = {
+      id: "F" + num,
+      name: "New function",
+      description: "",
+      categories: [],
+    };
+    next.content.functions.push(newFunction);
+    setFramework(next);
+    saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+    setEditing({ type: "function", functionIndex: next.content.functions.length - 1 });
+  }, [framework, frameworkId]);
+
   const addCategory = useCallback(
     (functionIndex: number) => {
       if (!framework) return;
@@ -297,6 +315,22 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
 
       <div className="space-y-2">
         <h3 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Functions</h3>
+        {framework.content.functions.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50/50 p-8 text-center dark:border-zinc-600 dark:bg-zinc-900/30">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              No functions yet. Add your first function to define categories and subcategories.
+            </p>
+            <button
+              type="button"
+              onClick={addFunction}
+              disabled={saveMutation.isPending}
+              className="mt-4 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            >
+              Add first function
+            </button>
+          </div>
+        ) : (
+          <>
         <ul className="space-y-3">
           {framework.content.functions.map((fn, functionIndex) => (
             <li
@@ -374,6 +408,16 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
             </li>
           ))}
         </ul>
+        <button
+          type="button"
+          onClick={addFunction}
+          disabled={saveMutation.isPending}
+          className="mt-3 w-full rounded-lg border border-dashed border-zinc-300 py-3 text-sm font-medium text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100"
+        >
+          + Add function
+        </button>
+          </>
+        )}
       </div>
     </div>
   );
