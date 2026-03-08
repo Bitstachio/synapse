@@ -91,7 +91,7 @@ export class FrameworksController {
   @ApiOperation({
     summary: "Get a single revision by ID",
     description:
-      "Returns one revision record by its ID, including previousContent, newContent, and diff (JSON Patch) for that change. The diff is precomputed when the revision is recorded (comparison of previous vs new state).",
+      "Returns one revision by ID with previousContent, newContent, and diff. Names/descriptions in newContent and in diff values are enriched from the current framework when the item still exists (same id), so the audit log shows current labels (e.g. 'Employee Privacy' instead of 'New category'). When enrichment was applied, response includes _enrichedWithCurrentNames: true.",
   })
   @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
   async findOneRevision(@Param("revisionId") revisionId: string) {
