@@ -151,3 +151,51 @@ export const deleteFramework = async (id: string): Promise<void> => {
     throw new Error("Failed to delete framework");
   }
 };
+
+export type FrameworkRevisionAction = "created" | "updated" | "deleted" | "activated";
+
+export type FrameworkRevision = {
+  _id: string;
+  action: FrameworkRevisionAction;
+  frameworkId: string;
+  frameworkName: string;
+  frameworkVersion: string;
+  userId: string;
+  performedAt: string;
+};
+
+export type FrameworkRevisionsFilters = {
+  frameworkId?: string;
+  userId?: string;
+  from?: string;
+  to?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export type FrameworkRevisionsResponse = {
+  data: FrameworkRevision[];
+  meta?: { timestamp?: string; path?: string };
+};
+
+export const getFrameworkRevisions = async (
+  filters: FrameworkRevisionsFilters = {},
+): Promise<FrameworkRevisionsResponse> => {
+  const params = new URLSearchParams();
+  if (filters.frameworkId) params.set("frameworkId", filters.frameworkId);
+  if (filters.userId) params.set("userId", filters.userId);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  if (filters.limit != null) params.set("limit", String(Math.min(100, Math.max(1, filters.limit))));
+  if (filters.offset != null && filters.offset > 0) params.set("offset", String(filters.offset));
+
+  const query = params.toString();
+  const url = `/api/v1/frameworks/revisions${query ? `?${query}` : ""}`;
+  const res = await fetchWithAuth(url, { method: "GET", cache: "no-store" });
+
+  if (!res.ok) {
+    throw new Error("Failed to load revision history");
+  }
+
+  return res.json();
+};
