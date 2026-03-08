@@ -360,6 +360,7 @@ export default function FrameworkRevisionsPage() {
                       <th className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">User ID</th>
                       <th className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Framework</th>
                       <th className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Version</th>
+                      <th className="px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">Changes</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -398,6 +399,14 @@ export default function FrameworkRevisionsPage() {
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">{rev.frameworkVersion}</td>
+                        <td className="px-4 py-3">
+                          <Link
+                            href={`/frameworks/revisions/${rev._id}`}
+                            className="text-zinc-600 underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                          >
+                            View
+                          </Link>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

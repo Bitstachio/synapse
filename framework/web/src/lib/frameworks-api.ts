@@ -1,5 +1,5 @@
 import { fetchWithAuth } from "@/lib/api-client";
-import type { Framework } from "@/types/framework";
+import type { Framework, FrameworkContent } from "@/types/framework";
 
 type ActiveFrameworkResponse = {
   data: Framework & { _id: string };
@@ -195,6 +195,46 @@ export const getFrameworkRevisions = async (
 
   if (!res.ok) {
     throw new Error("Failed to load revision history");
+  }
+
+  return res.json();
+};
+
+/** JSON Patch (RFC 6902) operation for revision diff */
+export type RevisionDiffOp = {
+  op: "add" | "remove" | "replace" | "move" | "copy" | "test";
+  path: string;
+  value?: unknown;
+  from?: string;
+};
+
+/** Single revision with optional diff data (older records may omit previousContent, newContent, diff) */
+export type RevisionDetail = {
+  _id: string;
+  action: FrameworkRevisionAction;
+  frameworkId: string;
+  frameworkName: string;
+  frameworkVersion: string;
+  userId: string;
+  performedAt: string;
+  previousContent?: FrameworkContent;
+  newContent?: FrameworkContent;
+  diff?: RevisionDiffOp[];
+};
+
+export type RevisionDetailResponse = {
+  data: RevisionDetail;
+  meta?: { timestamp?: string; path?: string };
+};
+
+export const getRevisionById = async (revisionId: string): Promise<RevisionDetailResponse> => {
+  const res = await fetchWithAuth(`/api/v1/frameworks/revisions/${revisionId}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to load revision");
   }
 
   return res.json();
