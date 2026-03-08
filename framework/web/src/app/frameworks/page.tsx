@@ -71,19 +71,7 @@ export default function FrameworksPage() {
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-zinc-950">
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <nav className="mb-6 flex flex-wrap items-center gap-4 text-sm">
-          <Link href="/" className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">
-            ← Back to active framework
-          </Link>
-          <Link
-            href="/frameworks/revisions"
-            className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-          >
-            Revision history →
-          </Link>
-        </nav>
-
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">Manage frameworks</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">Manage Frameworks</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Create new frameworks, edit any iteration, or set which one is active.
         </p>
@@ -155,7 +143,7 @@ export default function FrameworksPage() {
                 onClick={() => setShowCreate(true)}
                 className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:bg-zinc-800"
               >
-                + Create new framework
+                + Create
               </button>
             )}
           </div>

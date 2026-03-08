@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { QueryProvider } from "@/lib/query-provider";
 import { AuthGuard } from "@/components/AuthGuard/AuthGuard";
+import { AppNav } from "@/components/AppNav/AppNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,10 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryProvider>
           <AuthProvider>
-            <AuthGuard>{children}</AuthGuard>
+            <AuthGuard>
+              <AppNav />
+              {children}
+            </AuthGuard>
           </AuthProvider>
         </QueryProvider>
       </body>

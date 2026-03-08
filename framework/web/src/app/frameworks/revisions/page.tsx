@@ -180,17 +180,8 @@ export default function FrameworkRevisionsPage() {
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-zinc-950">
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <nav className="mb-6 text-sm">
-          <Link
-            href="/frameworks"
-            className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-          >
-            ← Back to frameworks
-          </Link>
-        </nav>
-
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-          Framework revision history
+          Framework Revision History
         </h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           View a log of framework modifications (created, updated, deleted, activated) with date, time, and user.
@@ -289,7 +280,7 @@ export default function FrameworkRevisionsPage() {
             </div>
             <div>
               <label htmlFor="filter-from" className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                From date (ISO 8601)
+                From Date (ISO 8601)
               </label>
               <input
                 id="filter-from"
@@ -304,7 +295,7 @@ export default function FrameworkRevisionsPage() {
             </div>
             <div>
               <label htmlFor="filter-to" className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                To date (ISO 8601)
+                To Date (ISO 8601)
               </label>
               <input
                 id="filter-to"
