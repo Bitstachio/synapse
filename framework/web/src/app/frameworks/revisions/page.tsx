@@ -8,10 +8,12 @@ import {
 } from "@/lib/frameworks-api";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const REVISIONS_QUERY_KEY = ["frameworks", "revisions"] as const;
 const DEFAULT_LIMIT = 50;
+
+type FrameworkOption = { id: string; name: string; version: string; label: string };
 
 function formatAction(action: string): string {
   return action.charAt(0).toUpperCase() + action.slice(1).toLowerCase();
@@ -34,8 +36,26 @@ function toDateTimeLocal(iso: string): string {
   return `${y}-${m}-${day}T${h}:${min}`;
 }
 
+function extractFrameworkOptionsFromRevisions(revisions: FrameworkRevision[]): FrameworkOption[] {
+  const byId = new Map<string, FrameworkOption>();
+  for (const rev of revisions) {
+    if (!byId.has(rev.frameworkId)) {
+      byId.set(rev.frameworkId, {
+        id: rev.frameworkId,
+        name: rev.frameworkName,
+        version: rev.frameworkVersion,
+        label: `${rev.frameworkName} (v${rev.frameworkVersion})`,
+      });
+    }
+  }
+  return Array.from(byId.values());
+}
+
 export default function FrameworkRevisionsPage() {
   const [frameworkId, setFrameworkId] = useState("");
+  const [frameworkComboboxInput, setFrameworkComboboxInput] = useState("");
+  const [frameworkComboboxOpen, setFrameworkComboboxOpen] = useState(false);
+  const frameworkComboboxRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState("");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -59,6 +79,67 @@ export default function FrameworkRevisionsPage() {
     queryFn: listFrameworks,
   });
 
+  const { data: revisionsForDropdown } = useQuery({
+    queryKey: [...REVISIONS_QUERY_KEY, "dropdown", { limit: 500 }],
+    queryFn: () => getFrameworkRevisions({ limit: 500 }),
+  });
+
+  const frameworkOptions: FrameworkOption[] = useMemo(() => {
+    const fromList: FrameworkOption[] = frameworks.map((f) => ({
+      id: f._id,
+      name: f.name,
+      version: f.version,
+      label: `${f.name} (v${f.version})`,
+    }));
+    const fromRevisions = extractFrameworkOptionsFromRevisions(revisionsForDropdown?.data ?? []);
+    const byId = new Map<string, FrameworkOption>(fromList.map((f) => [f.id, f]));
+    for (const f of fromRevisions) {
+      if (!byId.has(f.id)) byId.set(f.id, f);
+    }
+    return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+  }, [frameworks, revisionsForDropdown?.data]);
+
+  const filteredFrameworkOptions = useMemo(() => {
+    const q = frameworkComboboxInput.trim().toLowerCase();
+    if (!q) return frameworkOptions;
+    return frameworkOptions.filter(
+      (opt) =>
+        opt.name.toLowerCase().includes(q) ||
+        opt.version.toLowerCase().includes(q) ||
+        opt.label.toLowerCase().includes(q),
+    );
+  }, [frameworkOptions, frameworkComboboxInput]);
+
+  const selectedFramework = useMemo(
+    () => frameworkOptions.find((f) => f.id === frameworkId),
+    [frameworkOptions, frameworkId],
+  );
+
+  useEffect(() => {
+    if (selectedFramework && !frameworkComboboxOpen) {
+      setFrameworkComboboxInput(selectedFramework.label);
+    } else if (!frameworkId && !frameworkComboboxOpen) {
+      setFrameworkComboboxInput("");
+    }
+  }, [frameworkId, selectedFramework, frameworkComboboxOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (frameworkComboboxRef.current && !frameworkComboboxRef.current.contains(e.target as Node)) {
+        setFrameworkComboboxOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelectFramework = useCallback((opt: FrameworkOption | null) => {
+    setFrameworkId(opt ? opt.id : "");
+    setFrameworkComboboxInput(opt ? opt.label : "");
+    setFrameworkComboboxOpen(false);
+    setOffset(0);
+  }, []);
+
   const {
     data: revisionsData,
     isLoading,
@@ -71,6 +152,30 @@ export default function FrameworkRevisionsPage() {
   const revisions: FrameworkRevision[] = revisionsData?.data ?? [];
   const hasMore = revisions.length === limit;
   const hasPrevious = offset > 0;
+  const currentPage = Math.floor(offset / limit) + 1;
+
+  const pageIndices: (number | "ellipsis")[] = useMemo(() => {
+    const pages: (number | "ellipsis")[] = [1];
+    if (currentPage === 1) {
+      if (hasMore) pages.push(2);
+    } else if (currentPage === 2) {
+      pages.push(2);
+      if (hasMore) pages.push(3);
+    } else {
+      pages.push("ellipsis");
+      pages.push(currentPage - 1);
+      pages.push(currentPage);
+      if (hasMore) pages.push(currentPage + 1);
+    }
+    return pages;
+  }, [currentPage, hasMore]);
+
+  const goToPage = useCallback(
+    (page: number) => {
+      setOffset((page - 1) * limit);
+    },
+    [limit],
+  );
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-zinc-950">
@@ -94,26 +199,77 @@ export default function FrameworkRevisionsPage() {
         <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/30">
           <h2 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Filters</h2>
           <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
+            <div ref={frameworkComboboxRef} className="relative">
               <label htmlFor="filter-framework" className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 Framework
               </label>
-              <select
-                id="filter-framework"
-                value={frameworkId}
-                onChange={(e) => {
-                  setFrameworkId(e.target.value);
-                  setOffset(0);
-                }}
-                className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-              >
-                <option value="">All frameworks</option>
-                {frameworks.map((fw) => (
-                  <option key={fw._id} value={fw._id}>
-                    {fw.name} (v{fw.version})
-                  </option>
-                ))}
-              </select>
+              <div className="relative mt-1">
+                <input
+                  id="filter-framework"
+                  type="text"
+                  value={frameworkComboboxInput}
+                  onChange={(e) => {
+                    setFrameworkComboboxInput(e.target.value);
+                    setFrameworkComboboxOpen(true);
+                  }}
+                  onFocus={() => setFrameworkComboboxOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setFrameworkComboboxOpen(false);
+                    }
+                  }}
+                  placeholder="Type to search..."
+                  autoComplete="off"
+                  className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 pr-8 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                />
+                {frameworkId && (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectFramework(null)}
+                    className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
+                    aria-label="Clear framework filter"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              {frameworkComboboxOpen && (
+                <ul
+                  className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                  role="listbox"
+                >
+                  <li>
+                    <button
+                      type="button"
+                      role="option"
+                      onClick={() => handleSelectFramework(null)}
+                      className="w-full px-3 py-2 text-left text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                    >
+                      All frameworks
+                    </button>
+                  </li>
+                  {filteredFrameworkOptions.length === 0 ? (
+                    <li className="px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400">No matching frameworks</li>
+                  ) : (
+                    filteredFrameworkOptions.map((opt) => (
+                      <li key={opt.id}>
+                        <button
+                          type="button"
+                          role="option"
+                          onClick={() => handleSelectFramework(opt)}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 ${
+                            frameworkId === opt.id
+                              ? "bg-zinc-100 font-medium dark:bg-zinc-700"
+                              : "text-zinc-900 dark:text-zinc-100"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      </li>
+                    ))
+                  )}
+                </ul>
+              )}
             </div>
             <div>
               <label htmlFor="filter-user" className="block text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -127,7 +283,7 @@ export default function FrameworkRevisionsPage() {
                   setUserId(e.target.value);
                   setOffset(0);
                 }}
-                placeholder="e.g. auth0|..."
+                placeholder="E.g. auth0|..."
                 className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
               />
             </div>
@@ -217,10 +373,7 @@ export default function FrameworkRevisionsPage() {
                   </thead>
                   <tbody>
                     {revisions.map((rev) => (
-                      <tr
-                        key={rev._id}
-                        className="border-b border-zinc-100 dark:border-zinc-700/50"
-                      >
+                      <tr key={rev._id} className="border-b border-zinc-100 dark:border-zinc-700/50">
                         <td className="px-4 py-3">
                           <span
                             className={`inline-flex rounded px-2 py-0.5 text-xs font-medium ${
@@ -239,7 +392,10 @@ export default function FrameworkRevisionsPage() {
                         <td className="px-4 py-3 text-zinc-600 dark:text-zinc-400">
                           {formatDateTime(rev.performedAt)}
                         </td>
-                        <td className="max-w-[180px] truncate px-4 py-3 font-mono text-xs text-zinc-600 dark:text-zinc-400" title={rev.userId}>
+                        <td
+                          className="max-w-[180px] truncate px-4 py-3 font-mono text-xs text-zinc-600 dark:text-zinc-400"
+                          title={rev.userId}
+                        >
                           {rev.userId}
                         </td>
                         <td className="px-4 py-3">
@@ -258,8 +414,8 @@ export default function FrameworkRevisionsPage() {
               )}
             </div>
 
-            {(hasPrevious || hasMore) && (
-              <div className="mt-4 flex justify-between">
+            {revisions.length > 0 && (hasPrevious || hasMore || currentPage > 1) && (
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
                 <button
                   type="button"
                   onClick={() => setOffset((o) => Math.max(0, o - limit))}
@@ -268,6 +424,28 @@ export default function FrameworkRevisionsPage() {
                 >
                   Previous
                 </button>
+                <div className="flex items-center gap-1">
+                  {pageIndices.map((p, i) =>
+                    p === "ellipsis" ? (
+                      <span key={`ellipsis-${i}`} className="px-2 text-sm text-zinc-500 dark:text-zinc-400">
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => goToPage(p)}
+                        className={`min-w-[2.25rem] rounded-md border px-2 py-1.5 text-sm font-medium ${
+                          p === currentPage
+                            ? "border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                            : "border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ),
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => setOffset((o) => o + limit)}
