@@ -34,6 +34,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
   const [framework, setFramework] = useState<Framework | null>(null);
   const [frameworkId, setFrameworkId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditingTarget | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<EditingTarget | null>(null);
   const [conflictMessage, setConflictMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -243,6 +244,40 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     [framework],
   );
 
+  const getPendingDeleteLabel = useCallback((): string => {
+    if (!framework || !pendingDelete) return "";
+    if (pendingDelete.type === "function") {
+      const fn = framework.content.functions[pendingDelete.functionIndex];
+      return fn?.name ?? "this category";
+    }
+    if (pendingDelete.type === "category") {
+      const cat = framework.content.functions[pendingDelete.functionIndex]?.categories[pendingDelete.categoryIndex];
+      return cat?.name ?? "this subcategory";
+    }
+    const sub =
+      framework.content.functions[pendingDelete.functionIndex]?.categories[pendingDelete.categoryIndex]
+        ?.subcategories[pendingDelete.subcategoryIndex];
+    if (!sub) return "this instruction";
+    if (!sub.description.trim()) return sub.id;
+    return sub.description.length > 50 ? sub.description.slice(0, 50) + "…" : sub.description;
+  }, [framework, pendingDelete]);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!pendingDelete || !framework) return;
+    if (pendingDelete.type === "function") {
+      deleteFunction(pendingDelete.functionIndex);
+    } else if (pendingDelete.type === "category") {
+      deleteCategory(pendingDelete.functionIndex, pendingDelete.categoryIndex);
+    } else {
+      deleteSubcategory(
+        pendingDelete.functionIndex,
+        pendingDelete.categoryIndex,
+        pendingDelete.subcategoryIndex,
+      );
+    }
+    setPendingDelete(null);
+  }, [pendingDelete, framework, deleteFunction, deleteCategory, deleteSubcategory]);
+
   const handleCancel = useCallback(() => {
     if (!editing || !framework) {
       setEditing(null);
@@ -306,6 +341,39 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
 
   return (
     <div className="space-y-6">
+      {pendingDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-delete-title"
+        >
+          <div className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+            <h2 id="confirm-delete-title" className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              Remove this item?
+            </h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              &ldquo;{getPendingDeleteLabel()}&rdquo; will be removed. This cannot be undone.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPendingDelete(null)}
+                className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {conflictMessage && (
         <div
           className="fixed top-4 left-4 right-4 z-50 mx-auto flex max-w-4xl items-start justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-lg text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100 sm:left-6 sm:right-6"
@@ -373,7 +441,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                   function={fn}
                   onSave={(payload) => updateFunction(functionIndex, payload)}
                   onCancel={handleCancel}
-                  onDelete={() => deleteFunction(functionIndex)}
+                  onDelete={() => setPendingDelete({ type: "function", functionIndex })}
                 />
               ) : (
                 <FunctionView
@@ -388,7 +456,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                             category={cat}
                             onSave={(payload) => updateCategory(functionIndex, categoryIndex, payload)}
                             onCancel={handleCancel}
-                            onDelete={() => deleteCategory(functionIndex, categoryIndex)}
+                            onDelete={() => setPendingDelete({ type: "category", functionIndex, categoryIndex })}
                           />
                         ) : (
                           <CategoryView
@@ -411,7 +479,14 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                                         updateSubcategory(functionIndex, categoryIndex, subcategoryIndex, payload)
                                       }
                                       onCancel={handleCancel}
-                                      onDelete={() => deleteSubcategory(functionIndex, categoryIndex, subcategoryIndex)}
+                                      onDelete={() =>
+                                        setPendingDelete({
+                                          type: "subcategory",
+                                          functionIndex,
+                                          categoryIndex,
+                                          subcategoryIndex,
+                                        })
+                                      }
                                     />
                                   ) : (
                                     <SubcategoryView
