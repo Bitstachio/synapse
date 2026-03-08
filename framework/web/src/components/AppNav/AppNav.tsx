@@ -29,7 +29,7 @@ export function AppNav() {
   if (pathname === "/login") return null;
 
   return (
-    <div className="px-4 pt-6 pb-2 sm:px-6 lg:px-8" role="banner">
+    <div className="bg-zinc-50 px-4 pt-6 pb-2 dark:bg-zinc-950 sm:px-6 lg:px-8" role="banner">
       <div className="mx-auto flex max-w-5xl items-center">
         <div className="flex-1" aria-hidden="true" />
         <nav

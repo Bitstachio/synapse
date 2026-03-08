@@ -1,6 +1,7 @@
 "use client";
 
 import { FrameworkTree } from "@/components/FrameworkTree/FrameworkTree";
+import { ReturnToTop } from "@/components/ReturnToTop/ReturnToTop";
 import {
   ACTIVE_FRAMEWORK_QUERY_KEY,
   frameworkByIdQueryKey,
@@ -94,6 +95,13 @@ export default function FrameworkEditPage() {
           </div>
         )}
 
+        <Link
+          href="/frameworks"
+          className="mb-6 inline-block text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        >
+          ← Back to frameworks list
+        </Link>
+
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
@@ -127,6 +135,7 @@ export default function FrameworkEditPage() {
           <FrameworkTree frameworkId={id} />
         </div>
       </main>
+      <ReturnToTop />
     </div>
   );
 }

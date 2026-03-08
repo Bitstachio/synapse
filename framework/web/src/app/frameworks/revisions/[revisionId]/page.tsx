@@ -1,5 +1,6 @@
 "use client";
 
+import { ReturnToTop } from "@/components/ReturnToTop/ReturnToTop";
 import { getRevisionById, type RevisionDetail, type RevisionDiffOp } from "@/lib/frameworks-api";
 import type { FrameworkContent } from "@/types/framework";
 import { useQuery } from "@tanstack/react-query";
@@ -638,6 +639,7 @@ export default function RevisionDiffPage() {
           </div>
         )}
       </main>
+      <ReturnToTop />
     </div>
   );
 }

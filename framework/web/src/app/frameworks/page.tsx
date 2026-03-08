@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { ReturnToTop } from "@/components/ReturnToTop/ReturnToTop";
 import { ACTIVE_FRAMEWORK_QUERY_KEY } from "@/components/FrameworkTree/useActiveFramework";
 
 const FRAMEWORKS_LIST_QUERY_KEY = ["frameworks", "list"] as const;
@@ -190,6 +191,7 @@ export default function FrameworksPage() {
           </>
         )}
       </main>
+      <ReturnToTop />
     </div>
   );
 }
