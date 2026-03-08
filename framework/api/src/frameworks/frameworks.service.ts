@@ -16,8 +16,12 @@ export class FrameworksService {
 
   private async recordRevision(
     action: "created" | "updated" | "deleted" | "activated",
-    framework: { _id: unknown; name: string; version: string },
+    framework: { _id: unknown; name: string; version: string; content?: Record<string, unknown> },
     userId: string,
+    options?: {
+      previousContent?: Record<string, unknown>;
+      newContent?: Record<string, unknown>;
+    },
   ): Promise<void> {
     await this.revisionsService.record({
       action,
@@ -25,6 +29,8 @@ export class FrameworksService {
       frameworkName: framework.name,
       frameworkVersion: framework.version,
       userId,
+      previousContent: options?.previousContent,
+      newContent: options?.newContent ?? framework.content,
     });
   }
 
@@ -36,7 +42,9 @@ export class FrameworksService {
       const newFramework = new this.frameworkModel(createFrameworkDto);
       const saved = await newFramework.save();
       if (user?.sub) {
-        await this.recordRevision("created", saved, user.sub);
+        await this.recordRevision("created", saved, user.sub, {
+          newContent: saved.content as Record<string, unknown>,
+        });
       }
       return saved;
     } catch (error) {
@@ -57,7 +65,13 @@ export class FrameworksService {
       lastKnownUpdatedAt?: string;
     };
 
-    const options = { new: true, runValidators: true } as const;
+    const queryOptions = { new: true, runValidators: true } as const;
+    let previousContent: Record<string, unknown> | undefined;
+
+    if (user?.sub) {
+      const oldDoc = await this.frameworkModel.findById(id).lean().exec();
+      if (oldDoc?.content) previousContent = oldDoc.content as Record<string, unknown>;
+    }
 
     let updated: Framework | null;
 
@@ -66,7 +80,7 @@ export class FrameworksService {
         .findOneAndUpdate(
           { _id: id, updatedAt: new Date(lastKnownUpdatedAt) },
           updatePayload,
-          options,
+          queryOptions,
         )
         .exec();
       if (!updated) {
@@ -78,12 +92,17 @@ export class FrameworksService {
       }
     } else {
       updated = await this.frameworkModel
-        .findByIdAndUpdate(id, updatePayload, options)
+        .findByIdAndUpdate(id, updatePayload, queryOptions)
         .exec();
       if (!updated) throw new NotFoundException("Framework not found");
     }
+
     if (user?.sub) {
-      await this.recordRevision("updated", updated, user.sub);
+      const newContent = updated.content as Record<string, unknown>;
+      await this.recordRevision("updated", updated, user.sub, {
+        previousContent,
+        newContent: newContent && typeof newContent === "object" ? newContent : undefined,
+      });
     }
     return updated;
   }
@@ -126,12 +145,14 @@ export class FrameworksService {
     const result = await this.frameworkModel.findByIdAndDelete(id).exec();
     if (!result) throw new NotFoundException("Framework not found");
     if (user?.sub) {
+      const content = framework.content as Record<string, unknown>;
       await this.revisionsService.record({
         action: "deleted",
         frameworkId: id,
         frameworkName: name,
         frameworkVersion: version,
         userId: user.sub,
+        previousContent: content && typeof content === "object" ? content : undefined,
       });
     }
     return { deleted: true };

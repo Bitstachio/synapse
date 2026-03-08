@@ -60,7 +60,7 @@ export class FrameworksController {
   @ApiOperation({
     summary: "List framework revision history",
     description:
-      "Returns a list of framework modifications (created, updated, deleted, activated) with date/time and user id. Use query params to filter by framework, user, or date range.",
+      "Returns a list of framework modifications (created, updated, deleted, activated) with date/time and user id. Does not include previousContent, newContent, or diff; use GET /revisions/:revisionId for those. Query params filter by framework, user, or date range.",
   })
   @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
   @ApiQuery({ name: "frameworkId", required: false, description: "Filter by framework ID" })
@@ -85,6 +85,17 @@ export class FrameworksController {
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
     });
+  }
+
+  @Get("revisions/:revisionId")
+  @ApiOperation({
+    summary: "Get a single revision by ID",
+    description:
+      "Returns one revision record by its ID, including previousContent, newContent, and diff (JSON Patch) for that change. The diff is precomputed when the revision is recorded (comparison of previous vs new state).",
+  })
+  @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
+  async findOneRevision(@Param("revisionId") revisionId: string) {
+    return this.revisionsService.findOneRevision(revisionId);
   }
 
   @Get(":id")

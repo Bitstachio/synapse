@@ -1,10 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import { compare as jsonPatchCompare } from "fast-json-patch";
 import { Model } from "mongoose";
-import {
-  FrameworkRevision,
-  FrameworkRevisionAction,
-} from "./schemas/framework-revision.schema";
+import { FrameworkRevision, FrameworkRevisionAction } from "./schemas/framework-revision.schema";
 
 /** Seconds within which to treat repeated "updated" by same user/framework as one revision (0 = no dedupe). */
 const UPDATE_DEDUPE_WINDOW_SECONDS = 15;
@@ -15,6 +13,8 @@ export interface RevisionRecordInput {
   frameworkName: string;
   frameworkVersion: string;
   userId: string;
+  previousContent?: Record<string, unknown>;
+  newContent?: Record<string, unknown>;
 }
 
 export interface FindRevisionsFilters {
@@ -36,10 +36,7 @@ export class FrameworkRevisionsService {
   async record(input: RevisionRecordInput): Promise<FrameworkRevision | null> {
     const performedAt = new Date();
 
-    if (
-      input.action === "updated" &&
-      UPDATE_DEDUPE_WINDOW_SECONDS > 0
-    ) {
+    if (input.action === "updated" && UPDATE_DEDUPE_WINDOW_SECONDS > 0) {
       const since = new Date(performedAt.getTime() - UPDATE_DEDUPE_WINDOW_SECONDS * 1000);
       const recent = await this.revisionModel
         .findOne({
@@ -56,10 +53,27 @@ export class FrameworkRevisionsService {
       }
     }
 
-    const doc = new this.revisionModel({
-      ...input,
-      performedAt,
-    });
+    const { previousContent, newContent, ...rest } = input;
+    const payload: Record<string, unknown> = { ...rest, performedAt };
+
+    if (previousContent !== undefined) payload.previousContent = previousContent;
+    if (newContent !== undefined) payload.newContent = newContent;
+
+    if (
+      previousContent !== undefined &&
+      newContent !== undefined &&
+      typeof previousContent === "object" &&
+      typeof newContent === "object"
+    ) {
+      try {
+        const patch = jsonPatchCompare(previousContent as object, newContent as object, true);
+        if (patch.length > 0) payload.diff = patch;
+      } catch {
+        // If diff computation fails, still store previous/new content
+      }
+    }
+
+    const doc = new this.revisionModel(payload);
     return doc.save();
   }
 
@@ -77,10 +91,17 @@ export class FrameworkRevisionsService {
 
     return this.revisionModel
       .find(query)
+      .select("-previousContent -newContent -diff")
       .sort({ performedAt: -1 })
       .skip(offset)
       .limit(Math.min(limit, 100))
       .lean()
       .exec();
+  }
+
+  async findOneRevision(revisionId: string): Promise<FrameworkRevision> {
+    const revision = await this.revisionModel.findById(revisionId).lean().exec();
+    if (!revision) throw new NotFoundException("Revision not found");
+    return revision as FrameworkRevision;
   }
 }
