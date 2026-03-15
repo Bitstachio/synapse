@@ -28,9 +28,13 @@ function getDisplayableDiff(diff: RevisionDiffOp[] | undefined): RevisionDiffOp[
   return diff.filter((op) => op.op !== "test");
 }
 
-/** Path up to and including the item (e.g. /functions/0/categories/0/subcategories/3 for an instruction) */
+/** Path up to and including the item (e.g. /categories/0/subcategories/0/instructions/3 for an instruction) */
 function getItemPath(path: string): string {
   const segments = path.split("/").filter(Boolean);
+  const instIdx = segments.indexOf("instructions");
+  if (instIdx >= 0 && segments[instIdx + 1] !== undefined) {
+    return "/" + segments.slice(0, instIdx + 2).join("/");
+  }
   const subIdx = segments.indexOf("subcategories");
   if (subIdx >= 0 && segments[subIdx + 1] !== undefined) {
     return "/" + segments.slice(0, subIdx + 2).join("/");
@@ -38,10 +42,6 @@ function getItemPath(path: string): string {
   const catIdx = segments.indexOf("categories");
   if (catIdx >= 0 && segments[catIdx + 1] !== undefined) {
     return "/" + segments.slice(0, catIdx + 2).join("/");
-  }
-  const funcIdx = segments.indexOf("functions");
-  if (funcIdx >= 0 && segments[funcIdx + 1] !== undefined) {
-    return "/" + segments.slice(0, funcIdx + 2).join("/");
   }
   return path;
 }
@@ -81,49 +81,49 @@ function RevisionContextView({
   const next = revision.newContent;
   const opsByItemPath = groupOpsByItemPath(displayableOps);
 
-  const prevFuncs = prev?.functions ?? [];
-  const nextFuncs = next?.functions ?? [];
-  const numFunctions = Math.max(prevFuncs.length, nextFuncs.length);
+  const prevCats = prev?.categories ?? [];
+  const nextCats = next?.categories ?? [];
+  const numCategories = Math.max(prevCats.length, nextCats.length);
 
-  if (numFunctions === 0) {
+  if (numCategories === 0) {
     return <p className="text-sm text-zinc-500 dark:text-zinc-400">No framework content to show in context.</p>;
   }
 
   return (
     <div className="space-y-6 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/30">
-      {Array.from({ length: numFunctions }, (_, fi) => {
-        const prevFn = prevFuncs[fi];
-        const nextFn = nextFuncs[fi];
-        const fn = nextFn ?? prevFn;
-        if (!fn) return null;
+      {Array.from({ length: numCategories }, (_, ci) => {
+        const prevCat = prevCats[ci];
+        const nextCat = nextCats[ci];
+        const cat = nextCat ?? prevCat;
+        if (!cat) return null;
 
-        const functionPath = `/functions/${fi}`;
-        const functionOps = opsByItemPath.get(functionPath) ?? [];
-        const isFunctionAdded = !prevFn && !!nextFn;
+        const categoryPath = `/categories/${ci}`;
+        const categoryOps = opsByItemPath.get(categoryPath) ?? [];
+        const isCategoryAdded = !prevCat && !!nextCat;
 
         return (
           <section
-            key={fn.id ?? fi}
-            className={`space-y-3 ${isFunctionAdded ? "rounded-lg border border-emerald-200 bg-emerald-50/30 p-3 dark:border-emerald-800/50 dark:bg-emerald-950/20" : ""}`}
+            key={cat.id ?? ci}
+            className={`space-y-3 ${isCategoryAdded ? "rounded-lg border border-emerald-200 bg-emerald-50/30 p-3 dark:border-emerald-800/50 dark:bg-emerald-950/20" : ""}`}
           >
             <div>
               <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                {fn.name}
-                {fn.id && <span className="ml-1.5 font-normal text-zinc-500 dark:text-zinc-400">({fn.id})</span>}
-                {isFunctionAdded && <AddedBadge />}
+                {cat.name}
+                {cat.id && <span className="ml-1.5 font-normal text-zinc-500 dark:text-zinc-400">({cat.id})</span>}
+                {isCategoryAdded && <AddedBadge />}
               </h3>
-              {fn.description && <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{fn.description}</p>}
-              {isFunctionAdded && (
+              {cat.description && <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{cat.description}</p>}
+              {isCategoryAdded && (
                 <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-                  {(fn.categories?.length ?? 0) === 0
+                  {(cat.subcategories?.length ?? 0) === 0
                     ? "No subcategories yet"
-                    : `${fn.categories!.length} subcategor${fn.categories!.length === 1 ? "y" : "ies"}`}
+                    : `${cat.subcategories!.length} subcategor${cat.subcategories!.length === 1 ? "y" : "ies"}`}
                 </p>
               )}
             </div>
-            {!isFunctionAdded && functionOps.length > 0 && (
+            {!isCategoryAdded && categoryOps.length > 0 && (
               <div className="space-y-2">
-                {functionOps.map((op, oi) => (
+                {categoryOps.map((op, oi) => (
                   <ChangeCard
                     key={`${op.path}-${oi}`}
                     revision={revision}
@@ -137,37 +137,37 @@ function RevisionContextView({
             <div className="ml-4 space-y-4 border-l-2 border-zinc-200 pl-4 dark:border-zinc-700">
               {Array.from(
                 {
-                  length: Math.max(prevFn?.categories?.length ?? 0, nextFn?.categories?.length ?? 0),
+                  length: Math.max(prevCat?.subcategories?.length ?? 0, nextCat?.subcategories?.length ?? 0),
                 },
-                (_, ci) => {
-                  const prevCat = prevFn?.categories?.[ci];
-                  const nextCat = nextFn?.categories?.[ci];
-                  const cat = nextCat ?? prevCat;
-                  if (!cat) return null;
+                (_, si) => {
+                  const prevSub = prevCat?.subcategories?.[si];
+                  const nextSub = nextCat?.subcategories?.[si];
+                  const sub = nextSub ?? prevSub;
+                  if (!sub) return null;
 
-                  const categoryPath = `/functions/${fi}/categories/${ci}`;
-                  const isCategoryAdded = !prevCat && !!nextCat;
+                  const subcategoryPath = `/categories/${ci}/subcategories/${si}`;
+                  const isSubcategoryAdded = !prevSub && !!nextSub;
 
-                  const prevSubs = prevCat?.subcategories ?? [];
-                  const nextSubs = nextCat?.subcategories ?? [];
-                  const maxLen = Math.max(prevSubs.length, nextSubs.length);
+                  const prevInsts = prevSub?.instructions ?? [];
+                  const nextInsts = nextSub?.instructions ?? [];
+                  const maxLen = Math.max(prevInsts.length, nextInsts.length);
 
                   return (
-                    <div key={cat.id ?? ci} className="space-y-2">
+                    <div key={sub.id ?? si} className="space-y-2">
                       <h4 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-                        {cat.name}
-                        {cat.id && (
-                          <span className="ml-1 font-normal text-zinc-500 dark:text-zinc-400">({cat.id})</span>
+                        {sub.name}
+                        {sub.id && (
+                          <span className="ml-1 font-normal text-zinc-500 dark:text-zinc-400">({sub.id})</span>
                         )}
-                        {isCategoryAdded && <AddedBadge />}
+                        {isSubcategoryAdded && <AddedBadge />}
                       </h4>
                       <ul className="space-y-2">
-                        {Array.from({ length: maxLen }, (_, si) => {
-                          const path = `/functions/${fi}/categories/${ci}/subcategories/${si}`;
+                        {Array.from({ length: maxLen }, (_, ii) => {
+                          const path = `/categories/${ci}/subcategories/${si}/instructions/${ii}`;
                           const ops = opsByItemPath.get(path) ?? [];
-                          const prevSub = prevSubs[si];
-                          const nextSub = nextSubs[si];
-                          const instruction = nextSub ?? prevSub;
+                          const prevInst = prevInsts[ii];
+                          const nextInst = nextInsts[ii];
+                          const instruction = nextInst ?? prevInst;
                           const isInstructionAdded = ops.some((o) => o.op === "add");
 
                           if (ops.length > 0) {

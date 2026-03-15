@@ -1,26 +1,26 @@
 export type RiskLevel = "Low" | "Medium" | "High" | "Critical";
 
-export interface Subcategory {
+export interface Instruction {
   id: string;
   description: string;
   risk_level: RiskLevel;
 }
 
+export interface Subcategory {
+  id: string;
+  name: string;
+  instructions: Instruction[];
+}
+
 export interface Category {
   id: string;
   name: string;
+  description: string;
   subcategories: Subcategory[];
 }
 
-export interface FrameworkFunction {
-  id: string;
-  name: string;
-  description: string;
-  categories: Category[];
-}
-
 export interface FrameworkContent {
-  functions: FrameworkFunction[];
+  categories: Category[];
 }
 
 export interface Framework {

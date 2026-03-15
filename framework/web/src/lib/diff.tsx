@@ -4,36 +4,36 @@ import { parsePath } from "./json";
 
 /** Build a human-readable location from path using content (e.g. "Category GOVERN-STRUCTURE → Subcategory Work Design → Instruction GV.WD4") */
 export const getLocationLabel = (content: FrameworkContent | undefined, path: string): string => {
-  if (!content?.functions?.length) return path;
+  if (!content?.categories?.length) return path;
 
   const { segments, field } = parsePath(path);
   const parts: string[] = [];
 
   let i = 0;
-  if (segments[i] === "functions" && segments[i + 1] !== undefined) {
-    const funcIdx = parseInt(segments[i + 1], 10);
-    const fn = content.functions[funcIdx];
-    if (fn) {
-      parts.push(`Category ${fn.name}`);
-      i += 2;
-    }
-  }
   if (segments[i] === "categories" && segments[i + 1] !== undefined) {
-    const funcIdx = parts.length ? parseInt(segments[1], 10) : 0;
     const catIdx = parseInt(segments[i + 1], 10);
-    const cat = content.functions[funcIdx]?.categories?.[catIdx];
+    const cat = content.categories[catIdx];
     if (cat) {
-      parts.push(`Subcategory ${cat.name}`);
+      parts.push(`Category ${cat.name}`);
       i += 2;
     }
   }
   if (segments[i] === "subcategories" && segments[i + 1] !== undefined) {
-    const funcIdx = parts.length ? parseInt(segments[1], 10) : 0;
-    const catIdx = parseInt(segments[3], 10);
+    const catIdx = parts.length ? parseInt(segments[1], 10) : 0;
     const subIdx = parseInt(segments[i + 1], 10);
-    const sub = content.functions[funcIdx]?.categories?.[catIdx]?.subcategories?.[subIdx];
+    const sub = content.categories[catIdx]?.subcategories?.[subIdx];
     if (sub) {
-      parts.push(`Instruction ${sub.id}`);
+      parts.push(`Subcategory ${sub.name}`);
+      i += 2;
+    }
+  }
+  if (segments[i] === "instructions" && segments[i + 1] !== undefined) {
+    const catIdx = parts.length ? parseInt(segments[1], 10) : 0;
+    const subIdx = parseInt(segments[3], 10);
+    const instIdx = parseInt(segments[i + 1], 10);
+    const inst = content.categories[catIdx]?.subcategories?.[subIdx]?.instructions?.[instIdx];
+    if (inst) {
+      parts.push(`Instruction ${inst.id}`);
       i += 2;
     }
   }
@@ -47,7 +47,7 @@ export const getLocationLabel = (content: FrameworkContent | undefined, path: st
   return location;
 };
 
-/** Format added value for display: category/function objects as readable summary, not raw JSON */
+/** Format added value for display: category/subcategory/instruction objects as readable summary, not raw JSON */
 export const formatAddedValue = (value: unknown): ReactNode => {
   if (value == null) return "—";
   if (typeof value === "string") return value;
@@ -55,12 +55,12 @@ export const formatAddedValue = (value: unknown): ReactNode => {
   if (typeof value === "object" && value !== null) {
     const o = value as Record<string, unknown>;
 
-    // Top-level category (function): { id, name, description, categories }
-    if ("name" in o && Array.isArray(o.categories)) {
+    // Top-level category: { id, name, description, subcategories }
+    if ("name" in o && Array.isArray(o.subcategories)) {
       const id = o.id != null ? String(o.id) : null;
       const name = String(o.name ?? o.id ?? "Unnamed");
       const desc = o.description != null && String(o.description).trim() !== "" ? String(o.description) : null;
-      const count = o.categories.length;
+      const count = o.subcategories.length;
       const subSummary = count === 0 ? "No subcategories yet" : `${count} subcategor${count === 1 ? "y" : "ies"}`;
       return (
         <div className="space-y-1">
@@ -74,10 +74,10 @@ export const formatAddedValue = (value: unknown): ReactNode => {
       );
     }
 
-    // Middle-tier subcategory: { id, name, subcategories }
-    if ("name" in o && Array.isArray(o.subcategories)) {
+    // Middle-tier subcategory: { id, name, instructions }
+    if ("name" in o && Array.isArray(o.instructions)) {
       const name = String(o.name ?? o.id ?? "Unnamed");
-      const count = o.subcategories.length;
+      const count = o.instructions.length;
       const subSummary = count === 0 ? "No instructions yet" : `${count} instruction${count === 1 ? "" : "s"}`;
       return (
         <div className="space-y-1">
@@ -87,7 +87,7 @@ export const formatAddedValue = (value: unknown): ReactNode => {
       );
     }
 
-    // Instruction (subcategory item): { id, description, risk_level }
+    // Instruction (leaf): { id, description, risk_level }
     if ("description" in o) {
       const desc = String(o.description ?? "");
       const risk = o.risk_level != null ? String(o.risk_level) : null;

@@ -3,31 +3,40 @@ import { Subcategory } from "@/types/framework";
 type SubcategoryViewProps = {
   subcategory: Subcategory;
   onEdit: () => void;
+  onAddInstruction: () => void;
+  renderInstructions: () => React.ReactNode;
 };
 
-const SubcategoryView = ({ subcategory, onEdit }: SubcategoryViewProps) => {
+const SubcategoryView = ({ subcategory, onEdit, onAddInstruction, renderInstructions }: SubcategoryViewProps) => {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-2 rounded border border-zinc-100 bg-white py-2 pr-2 pl-2 dark:border-zinc-700 dark:bg-zinc-900/30">
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-          Instruction
-        </p>
-        <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">{subcategory.id}</span>
-        <span
-          className="ml-2 rounded px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:text-zinc-400"
-          title="Risk level"
-        >
-          {subcategory.risk_level}
-        </span>
-        <p className="mt-0.5 text-sm text-zinc-700 dark:text-zinc-300">{subcategory.description}</p>
+    <div className="rounded border border-zinc-100 bg-zinc-50/50 p-3 dark:border-zinc-700 dark:bg-zinc-800/30">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">{subcategory.id}</span>
+          <h5 className="font-medium text-zinc-800 dark:text-zinc-200">{subcategory.name}</h5>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600"
+            aria-label="Edit subcategory"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={onAddInstruction}
+            className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600"
+            aria-label="Add instruction"
+          >
+            Add instruction
+          </button>
+        </div>
       </div>
-      <button
-        type="button"
-        onClick={onEdit}
-        className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
-      >
-        Edit
-      </button>
+      {subcategory.instructions.length > 0 && (
+        <ul className="mt-2 ml-3 border-l-2 border-zinc-200 pl-3 dark:border-zinc-600">{renderInstructions()}</ul>
+      )}
     </div>
   );
 };

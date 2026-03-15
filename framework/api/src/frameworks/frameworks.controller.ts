@@ -91,7 +91,7 @@ export class FrameworksController {
   @ApiOperation({
     summary: "Get a single revision by ID",
     description:
-      "Returns one revision by ID with previousContent, newContent, and diff. Names/descriptions in newContent and in diff values are enriched from the current framework when the item still exists (same id), so the audit log shows current labels (e.g. 'Employee Privacy' instead of 'New category'). When enrichment was applied, response includes _enrichedWithCurrentNames: true.",
+      "Returns one revision by ID with previousContent, newContent, and diff. Names/descriptions in newContent and in diff values are enriched from the current framework when the item still exists (same id), so the audit log shows current labels (e.g. 'Employee Privacy' instead of 'New instruction'). When enrichment was applied, response includes _enrichedWithCurrentNames: true.",
   })
   @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
   async findOneRevision(@Param("revisionId") revisionId: string) {
@@ -110,7 +110,7 @@ export class FrameworksController {
     summary: "Update an existing framework including its hierarchical content",
     description:
       "Allows updating framework metadata (name, version, isActive) and the JSON `content` tree. " +
-      "To add, update, or delete categories and subcategories, send the modified `content` structure.",
+      "To add, update, or delete subcategories and instructions, send the modified `content` structure.",
   })
   @PermissionsDecorator(PermissionsConstants.UPDATE_FRAMEWORKS)
   @ApiBody({ type: UpdateFrameworkDto })

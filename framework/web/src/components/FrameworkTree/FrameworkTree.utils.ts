@@ -4,11 +4,11 @@ export const shallowCloneFramework = (f: Framework): Framework => ({
   ...f,
   content: {
     ...f.content,
-    functions: f.content.functions.map((fn) => ({
-      ...fn,
-      categories: fn.categories.map((cat) => ({
-        ...cat,
-        subcategories: [...cat.subcategories],
+    categories: f.content.categories.map((cat) => ({
+      ...cat,
+      subcategories: cat.subcategories.map((sub) => ({
+        ...sub,
+        instructions: [...sub.instructions],
       })),
     })),
   },

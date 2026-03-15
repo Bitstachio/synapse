@@ -12,7 +12,7 @@ export class Framework extends Document {
   @Prop({ default: false })
   isActive: boolean;
 
-  // Stores Functions -> Categories -> Subcategories tree
+  // Stores Categories -> Subcategories -> Instructions tree
   @Prop({ type: Object, required: true })
   content: Record<string, any>;
 }

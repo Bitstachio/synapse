@@ -7,6 +7,7 @@ import { FrameworkRevision, FrameworkRevisionAction } from "./schemas/framework-
 import {
   enrichDiffValuesWithCurrent,
   enrichNewContentWithCurrent,
+  normalizeContentToNewShape,
 } from "./revision-enrichment";
 
 /** Seconds within which to treat repeated "updated" by same user/framework as one revision (0 = no dedupe). */
@@ -114,12 +115,22 @@ export class FrameworkRevisionsService {
     let currentContent: Record<string, unknown> | null = null;
     if (frameworkId) {
       const current = await this.frameworkModel.findById(frameworkId).lean().exec();
-      if (current?.content) currentContent = current.content as Record<string, unknown>;
+      if (current?.content) {
+        currentContent = normalizeContentToNewShape(current.content as Record<string, unknown>);
+      }
     }
 
     const cloned = JSON.parse(JSON.stringify(revision)) as FrameworkRevision & {
       _enrichedWithCurrentNames?: boolean;
     };
+    if (
+      cloned.newContent &&
+      typeof cloned.newContent === "object" &&
+      cloned.newContent !== null
+    ) {
+      const normalized = normalizeContentToNewShape(cloned.newContent as Record<string, unknown>);
+      if (normalized) cloned.newContent = normalized;
+    }
 
     if (currentContent) {
       enrichNewContentWithCurrent(cloned.newContent, currentContent);

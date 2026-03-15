@@ -21,7 +21,7 @@ const ChangeCard = ({ revision, op, contentForLabel, showLocationLabel = true }:
     op.value &&
     typeof op.value === "object" &&
     "name" in op.value &&
-    Array.isArray((op.value as Record<string, unknown>).categories)
+    Array.isArray((op.value as Record<string, unknown>).subcategories)
       ? (() => {
           const v = op.value as Record<string, unknown>;
           const id = v.id != null ? String(v.id) : null;

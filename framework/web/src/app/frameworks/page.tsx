@@ -13,7 +13,7 @@ const FRAMEWORKS_LIST_QUERY_KEY = ["frameworks", "list"] as const;
 type SortOption = "name" | "dateModified";
 type SortDirection = "asc" | "desc";
 
-const emptyContent = { functions: [] };
+const emptyContent = { categories: [] };
 
 function sortFrameworks(
   frameworks: FrameworkListItem[],

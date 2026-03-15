@@ -5,16 +5,16 @@ export const mockFramework: Framework = {
   version: "2026.02",
   isActive: true,
   content: {
-    functions: [
+    categories: [
       {
         id: "GV",
         name: "GOVERN-STRUCTURE",
         description: "Policy-level guardrails for work design.",
-        categories: [
+        subcategories: [
           {
             id: "GV.WD",
             name: "Work Design & Workload",
-            subcategories: [
+            instructions: [
               {
                 id: "GV.WD1",
                 description:
@@ -41,11 +41,11 @@ export const mockFramework: Framework = {
         id: "PR",
         name: "PROTECT-AGENCY",
         description: "Protecting employee autonomy and preventing invasive surveillance.",
-        categories: [
+        subcategories: [
           {
             id: "PR.SM",
             name: "Surveillance & Monitoring",
-            subcategories: [
+            instructions: [
               {
                 id: "PR.SM1",
                 description:
@@ -63,7 +63,7 @@ export const mockFramework: Framework = {
           {
             id: "PR.AU",
             name: "Algorithmic Autonomy",
-            subcategories: [
+            instructions: [
               {
                 id: "PR.AU1",
                 description:
@@ -84,11 +84,11 @@ export const mockFramework: Framework = {
         id: "EM",
         name: "EMPOWER-SOCIAL",
         description: "Maintaining the social fabric and support systems of the bank.",
-        categories: [
+        subcategories: [
           {
             id: "EM.SI",
             name: "Social Isolation",
-            subcategories: [
+            instructions: [
               {
                 id: "EM.SI1",
                 description: "Identifying tools that replace human-to-human mentorship with automated chatbots.",
@@ -108,11 +108,11 @@ export const mockFramework: Framework = {
         id: "LM",
         name: "LIMIT-BIAS",
         description: "Limiting the psychological harm of biased algorithmic management.",
-        categories: [
+        subcategories: [
           {
             id: "LM.FE",
             name: "Fairness & Equity",
-            subcategories: [
+            instructions: [
               {
                 id: "LM.FE1",
                 description: "Detecting bias in AI-driven shift scheduling that favors specific demographics.",

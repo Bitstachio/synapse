@@ -1,11 +1,11 @@
 "use client";
 
-import type { Category, Framework, FrameworkFunction, Subcategory } from "@/types/framework";
+import type { Category, Framework, Instruction, Subcategory } from "@/types/framework";
 import { useCallback, useEffect, useState } from "react";
 import CategoryEdit from "../CategoryEdit/CategoryEdit";
 import CategoryView from "../CategoryView/CategoryView";
-import FunctionEdit from "../FunctionEdit/FunctionEdit";
-import FunctionView from "../FunctionView/FunctionView";
+import InstructionEdit from "../InstructionEdit/InstructionEdit";
+import InstructionView from "../InstructionView/InstructionView";
 import SubcategoryEdit from "../SubcategoryEdit/SubcategoryEdit";
 import SubcategoryView from "../SubcategoryView/SubcategoryView";
 import { EditingTarget } from "./FrameworkTree.types";
@@ -87,87 +87,13 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     },
   });
 
-  const updateFunction = useCallback(
-    (functionIndex: number, payload: Partial<FrameworkFunction>) => {
-      if (!framework) return;
-      const next = shallowCloneFramework(framework);
-      const fn = next.content.functions[functionIndex];
-      if (!fn) return;
-      next.content.functions[functionIndex] = { ...fn, ...payload };
-      setFramework(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
-      setEditing(null);
-    },
-    [framework],
-  );
-
-  const deleteFunction = useCallback(
-    (functionIndex: number) => {
-      if (!framework) return;
-      const next = shallowCloneFramework(framework);
-      next.content.functions.splice(functionIndex, 1);
-      setFramework(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
-      setEditing(null);
-    },
-    [framework],
-  );
-
-  const addFunction = useCallback(() => {
-    if (!framework) return;
-    const next = shallowCloneFramework(framework);
-    const existingIds = next.content.functions.map((f) => f.id);
-    let num = 1;
-    while (existingIds.includes("F" + num)) num++;
-    const newFunction: FrameworkFunction = {
-      id: "F" + num,
-      name: "New category",
-      description: "",
-      categories: [],
-    };
-    next.content.functions.push(newFunction);
-    setFramework(next);
-    saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
-    setEditing({ type: "function", functionIndex: next.content.functions.length - 1, isNew: true });
-  }, [framework, frameworkId]);
-
-  const addCategory = useCallback(
-    (functionIndex: number) => {
-      if (!framework) return;
-      const next = shallowCloneFramework(framework);
-      const fn = next.content.functions[functionIndex];
-      const prefix = fn.id + ".";
-      const existingIds = fn.categories.map((c) => c.id);
-      let num = 1;
-      while (existingIds.includes(prefix + "C" + num)) num++;
-      const newCategory: Category = {
-        id: prefix + "C" + num,
-        name: "New subcategory",
-        subcategories: [],
-      };
-      fn.categories.push(newCategory);
-      setFramework(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
-      setEditing({
-        type: "category",
-        functionIndex,
-        categoryIndex: fn.categories.length - 1,
-        isNew: true,
-      });
-    },
-    [framework],
-  );
-
   const updateCategory = useCallback(
-    (functionIndex: number, categoryIndex: number, payload: Partial<Category>) => {
+    (categoryIndex: number, payload: Partial<Category>) => {
       if (!framework) return;
       const next = shallowCloneFramework(framework);
-      const cat = next.content.functions[functionIndex].categories[categoryIndex];
+      const cat = next.content.categories[categoryIndex];
       if (!cat) return;
-      next.content.functions[functionIndex].categories[categoryIndex] = {
-        ...cat,
-        ...payload,
-      };
+      next.content.categories[categoryIndex] = { ...cat, ...payload };
       setFramework(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
@@ -176,10 +102,10 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
   );
 
   const deleteCategory = useCallback(
-    (functionIndex: number, categoryIndex: number) => {
+    (categoryIndex: number) => {
       if (!framework) return;
       const next = shallowCloneFramework(framework);
-      next.content.functions[functionIndex].categories.splice(categoryIndex, 1);
+      next.content.categories.splice(categoryIndex, 1);
       setFramework(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
@@ -187,26 +113,43 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     [framework],
   );
 
+  const addCategory = useCallback(() => {
+    if (!framework) return;
+    const next = shallowCloneFramework(framework);
+    const existingIds = next.content.categories.map((c) => c.id);
+    let num = 1;
+    while (existingIds.includes("F" + num)) num++;
+    const newCategory: Category = {
+      id: "F" + num,
+      name: "New category",
+      description: "",
+      subcategories: [],
+    };
+    next.content.categories.push(newCategory);
+    setFramework(next);
+    saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+    setEditing({ type: "category", categoryIndex: next.content.categories.length - 1, isNew: true });
+  }, [framework, frameworkId]);
+
   const addSubcategory = useCallback(
-    (functionIndex: number, categoryIndex: number) => {
+    (categoryIndex: number) => {
       if (!framework) return;
       const next = shallowCloneFramework(framework);
-      const cat = next.content.functions[functionIndex].categories[categoryIndex];
-      const prefix = cat.id;
-      const existingIds = cat.subcategories.map((s) => s.id);
+      const cat = next.content.categories[categoryIndex];
+      const prefix = cat.id + ".";
+      const existingIds = cat.subcategories.map((c) => c.id);
       let num = 1;
-      while (existingIds.includes(prefix + num)) num++;
-      const newSub: Subcategory = {
-        id: prefix + num,
-        description: "New instruction description",
-        risk_level: "Medium",
+      while (existingIds.includes(prefix + "C" + num)) num++;
+      const newSubcategory: Subcategory = {
+        id: prefix + "C" + num,
+        name: "New subcategory",
+        instructions: [],
       };
-      cat.subcategories.push(newSub);
+      cat.subcategories.push(newSubcategory);
       setFramework(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing({
         type: "subcategory",
-        functionIndex,
         categoryIndex,
         subcategoryIndex: cat.subcategories.length - 1,
         isNew: true,
@@ -216,12 +159,12 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
   );
 
   const updateSubcategory = useCallback(
-    (functionIndex: number, categoryIndex: number, subcategoryIndex: number, payload: Partial<Subcategory>) => {
+    (categoryIndex: number, subcategoryIndex: number, payload: Partial<Subcategory>) => {
       if (!framework) return;
       const next = shallowCloneFramework(framework);
-      const sub = next.content.functions[functionIndex].categories[categoryIndex].subcategories[subcategoryIndex];
+      const sub = next.content.categories[categoryIndex].subcategories[subcategoryIndex];
       if (!sub) return;
-      next.content.functions[functionIndex].categories[categoryIndex].subcategories[subcategoryIndex] = {
+      next.content.categories[categoryIndex].subcategories[subcategoryIndex] = {
         ...sub,
         ...payload,
       };
@@ -233,10 +176,76 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
   );
 
   const deleteSubcategory = useCallback(
-    (functionIndex: number, categoryIndex: number, subcategoryIndex: number) => {
+    (categoryIndex: number, subcategoryIndex: number) => {
       if (!framework) return;
       const next = shallowCloneFramework(framework);
-      next.content.functions[functionIndex].categories[categoryIndex].subcategories.splice(subcategoryIndex, 1);
+      next.content.categories[categoryIndex].subcategories.splice(subcategoryIndex, 1);
+      setFramework(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      setEditing(null);
+    },
+    [framework],
+  );
+
+  const addInstruction = useCallback(
+    (categoryIndex: number, subcategoryIndex: number) => {
+      if (!framework) return;
+      const next = shallowCloneFramework(framework);
+      const sub = next.content.categories[categoryIndex].subcategories[subcategoryIndex];
+      const prefix = sub.id;
+      const existingIds = sub.instructions.map((s) => s.id);
+      let num = 1;
+      while (existingIds.includes(prefix + num)) num++;
+      const newInstruction: Instruction = {
+        id: prefix + num,
+        description: "New instruction description",
+        risk_level: "Medium",
+      };
+      sub.instructions.push(newInstruction);
+      setFramework(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      setEditing({
+        type: "instruction",
+        categoryIndex,
+        subcategoryIndex,
+        instructionIndex: sub.instructions.length - 1,
+        isNew: true,
+      });
+    },
+    [framework],
+  );
+
+  const updateInstruction = useCallback(
+    (
+      categoryIndex: number,
+      subcategoryIndex: number,
+      instructionIndex: number,
+      payload: Partial<Instruction>,
+    ) => {
+      if (!framework) return;
+      const next = shallowCloneFramework(framework);
+      const inst =
+        next.content.categories[categoryIndex].subcategories[subcategoryIndex].instructions[instructionIndex];
+      if (!inst) return;
+      next.content.categories[categoryIndex].subcategories[subcategoryIndex].instructions[instructionIndex] = {
+        ...inst,
+        ...payload,
+      };
+      setFramework(next);
+      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      setEditing(null);
+    },
+    [framework],
+  );
+
+  const deleteInstruction = useCallback(
+    (categoryIndex: number, subcategoryIndex: number, instructionIndex: number) => {
+      if (!framework) return;
+      const next = shallowCloneFramework(framework);
+      next.content.categories[categoryIndex].subcategories[subcategoryIndex].instructions.splice(
+        instructionIndex,
+        1,
+      );
       setFramework(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
@@ -246,37 +255,41 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
 
   const getPendingDeleteLabel = useCallback((): string => {
     if (!framework || !pendingDelete) return "";
-    if (pendingDelete.type === "function") {
-      const fn = framework.content.functions[pendingDelete.functionIndex];
-      return fn?.name ?? "this category";
-    }
     if (pendingDelete.type === "category") {
-      const cat = framework.content.functions[pendingDelete.functionIndex]?.categories[pendingDelete.categoryIndex];
-      return cat?.name ?? "this subcategory";
+      const cat = framework.content.categories[pendingDelete.categoryIndex];
+      return cat?.name ?? "this category";
     }
-    const sub =
-      framework.content.functions[pendingDelete.functionIndex]?.categories[pendingDelete.categoryIndex]
-        ?.subcategories[pendingDelete.subcategoryIndex];
-    if (!sub) return "this instruction";
-    if (!sub.description.trim()) return sub.id;
-    return sub.description.length > 50 ? sub.description.slice(0, 50) + "…" : sub.description;
+    if (pendingDelete.type === "subcategory") {
+      const sub =
+        framework.content.categories[pendingDelete.categoryIndex]?.subcategories[
+          pendingDelete.subcategoryIndex
+        ];
+      return sub?.name ?? "this subcategory";
+    }
+    const inst =
+      framework.content.categories[pendingDelete.categoryIndex]?.subcategories[
+        pendingDelete.subcategoryIndex
+      ]?.instructions[pendingDelete.instructionIndex];
+    if (!inst) return "this instruction";
+    if (!inst.description.trim()) return inst.id;
+    return inst.description.length > 50 ? inst.description.slice(0, 50) + "…" : inst.description;
   }, [framework, pendingDelete]);
 
   const handleConfirmDelete = useCallback(() => {
     if (!pendingDelete || !framework) return;
-    if (pendingDelete.type === "function") {
-      deleteFunction(pendingDelete.functionIndex);
-    } else if (pendingDelete.type === "category") {
-      deleteCategory(pendingDelete.functionIndex, pendingDelete.categoryIndex);
+    if (pendingDelete.type === "category") {
+      deleteCategory(pendingDelete.categoryIndex);
+    } else if (pendingDelete.type === "subcategory") {
+      deleteSubcategory(pendingDelete.categoryIndex, pendingDelete.subcategoryIndex);
     } else {
-      deleteSubcategory(
-        pendingDelete.functionIndex,
+      deleteInstruction(
         pendingDelete.categoryIndex,
         pendingDelete.subcategoryIndex,
+        pendingDelete.instructionIndex,
       );
     }
     setPendingDelete(null);
-  }, [pendingDelete, framework, deleteFunction, deleteCategory, deleteSubcategory]);
+  }, [pendingDelete, framework, deleteCategory, deleteSubcategory, deleteInstruction]);
 
   const handleCancel = useCallback(() => {
     if (!editing || !framework) {
@@ -284,20 +297,20 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
       return;
     }
     if ("isNew" in editing && editing.isNew) {
-      if (editing.type === "function") {
+      if (editing.type === "category") {
         const next = shallowCloneFramework(framework);
-        next.content.functions.splice(editing.functionIndex, 1);
+        next.content.categories.splice(editing.categoryIndex, 1);
         setFramework(next);
         saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
-      } else if (editing.type === "category") {
+      } else if (editing.type === "subcategory") {
         const next = shallowCloneFramework(framework);
-        next.content.functions[editing.functionIndex].categories.splice(editing.categoryIndex, 1);
+        next.content.categories[editing.categoryIndex].subcategories.splice(editing.subcategoryIndex, 1);
         setFramework(next);
         saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       } else {
         const next = shallowCloneFramework(framework);
-        next.content.functions[editing.functionIndex].categories[editing.categoryIndex].subcategories.splice(
-          editing.subcategoryIndex,
+        next.content.categories[editing.categoryIndex].subcategories[editing.subcategoryIndex].instructions.splice(
+          editing.instructionIndex,
           1,
         );
         setFramework(next);
@@ -322,7 +335,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     );
   }
 
-  if (!framework.content || !Array.isArray(framework.content.functions)) {
+  if (!framework.content || !Array.isArray(framework.content.categories)) {
     return (
       <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-900 dark:border-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-100">
         <p>Active framework is missing category definitions.</p>
@@ -330,14 +343,16 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     );
   }
 
-  const isEditingFunction = (i: number) => editing?.type === "function" && editing.functionIndex === i;
-  const isEditingCategory = (fi: number, ci: number) =>
-    editing?.type === "category" && editing.functionIndex === fi && editing.categoryIndex === ci;
-  const isEditingSubcategory = (fi: number, ci: number, si: number) =>
+  const isEditingCategory = (i: number) => editing?.type === "category" && editing.categoryIndex === i;
+  const isEditingSubcategory = (ci: number, si: number) =>
     editing?.type === "subcategory" &&
-    editing.functionIndex === fi &&
     editing.categoryIndex === ci &&
     editing.subcategoryIndex === si;
+  const isEditingInstruction = (ci: number, si: number, ii: number) =>
+    editing?.type === "instruction" &&
+    editing.categoryIndex === ci &&
+    editing.subcategoryIndex === si &&
+    editing.instructionIndex === ii;
 
   return (
     <div className="space-y-6">
@@ -414,16 +429,17 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
 
       <div className="space-y-2">
         <h3 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Categories</h3>
-        {framework.content.functions.length === 0 ? (
+        {framework.content.categories.length === 0 ? (
           <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50/50 p-8 text-center dark:border-zinc-600 dark:bg-zinc-900/30">
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               No categories yet. Add your first category to define subcategories and instructions.
             </p>
             <button
               type="button"
-              onClick={addFunction}
+              onClick={addCategory}
               disabled={saveMutation.isPending}
               className="mt-4 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+              aria-label="Add first category"
             >
               Add first category
             </button>
@@ -431,72 +447,85 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
         ) : (
           <>
         <ul className="space-y-3">
-          {framework.content.functions.map((fn, functionIndex) => (
+          {framework.content.categories.map((cat, categoryIndex) => (
             <li
-              key={fn.id}
+              key={cat.id}
               className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/30"
             >
-              {isEditingFunction(functionIndex) ? (
-                <FunctionEdit
-                  function={fn}
-                  onSave={(payload) => updateFunction(functionIndex, payload)}
+              {isEditingCategory(categoryIndex) ? (
+                <CategoryEdit
+                  category={cat}
+                  onSave={(payload) => updateCategory(categoryIndex, payload)}
                   onCancel={handleCancel}
-                  onDelete={() => setPendingDelete({ type: "function", functionIndex })}
+                  onDelete={() => setPendingDelete({ type: "category", categoryIndex })}
                 />
               ) : (
-                <FunctionView
-                  function={fn}
-                  onEdit={() => setEditing({ type: "function", functionIndex })}
-                  onAddCategory={() => addCategory(functionIndex)}
-                  renderCategories={() =>
-                    fn.categories.map((cat, categoryIndex) => (
-                      <li key={cat.id} className="mt-2">
-                        {isEditingCategory(functionIndex, categoryIndex) ? (
-                          <CategoryEdit
-                            category={cat}
-                            onSave={(payload) => updateCategory(functionIndex, categoryIndex, payload)}
+                <CategoryView
+                  category={cat}
+                  onEdit={() => setEditing({ type: "category", categoryIndex })}
+                  onAddSubcategory={() => addSubcategory(categoryIndex)}
+                  renderSubcategories={() =>
+                    cat.subcategories.map((sub, subcategoryIndex) => (
+                      <li key={sub.id} className="mt-2">
+                        {isEditingSubcategory(categoryIndex, subcategoryIndex) ? (
+                          <SubcategoryEdit
+                            subcategory={sub}
+                            onSave={(payload) =>
+                              updateSubcategory(categoryIndex, subcategoryIndex, payload)
+                            }
                             onCancel={handleCancel}
-                            onDelete={() => setPendingDelete({ type: "category", functionIndex, categoryIndex })}
-                          />
-                        ) : (
-                          <CategoryView
-                            category={cat}
-                            onEdit={() =>
-                              setEditing({
-                                type: "category",
-                                functionIndex,
+                            onDelete={() =>
+                              setPendingDelete({
+                                type: "subcategory",
                                 categoryIndex,
+                                subcategoryIndex,
                               })
                             }
-                            onAddSubcategory={() => addSubcategory(functionIndex, categoryIndex)}
-                            renderSubcategories={() =>
-                              cat.subcategories.map((sub, subcategoryIndex) => (
-                                <li key={sub.id} className="mt-1">
-                                  {isEditingSubcategory(functionIndex, categoryIndex, subcategoryIndex) ? (
-                                    <SubcategoryEdit
-                                      subcategory={sub}
+                          />
+                        ) : (
+                          <SubcategoryView
+                            subcategory={sub}
+                            onEdit={() =>
+                              setEditing({
+                                type: "subcategory",
+                                categoryIndex,
+                                subcategoryIndex,
+                              })
+                            }
+                            onAddInstruction={() => addInstruction(categoryIndex, subcategoryIndex)}
+                            renderInstructions={() =>
+                              sub.instructions.map((inst, instructionIndex) => (
+                                <li key={inst.id} className="mt-1">
+                                  {isEditingInstruction(categoryIndex, subcategoryIndex, instructionIndex) ? (
+                                    <InstructionEdit
+                                      instruction={inst}
                                       onSave={(payload) =>
-                                        updateSubcategory(functionIndex, categoryIndex, subcategoryIndex, payload)
+                                        updateInstruction(
+                                          categoryIndex,
+                                          subcategoryIndex,
+                                          instructionIndex,
+                                          payload,
+                                        )
                                       }
                                       onCancel={handleCancel}
                                       onDelete={() =>
                                         setPendingDelete({
-                                          type: "subcategory",
-                                          functionIndex,
+                                          type: "instruction",
                                           categoryIndex,
                                           subcategoryIndex,
+                                          instructionIndex,
                                         })
                                       }
                                     />
                                   ) : (
-                                    <SubcategoryView
-                                      subcategory={sub}
+                                    <InstructionView
+                                      instruction={inst}
                                       onEdit={() =>
                                         setEditing({
-                                          type: "subcategory",
-                                          functionIndex,
+                                          type: "instruction",
                                           categoryIndex,
                                           subcategoryIndex,
+                                          instructionIndex,
                                         })
                                       }
                                     />
@@ -516,9 +545,10 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
         </ul>
         <button
           type="button"
-          onClick={addFunction}
+          onClick={addCategory}
           disabled={saveMutation.isPending}
-          className="mt-3 w-full rounded-lg border border-dashed border-zinc-300 py-3 text-sm font-medium text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100"
+          className="mt-3 w-full rounded-lg border border-dashed border-zinc-300 py-3 text-sm font-medium text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-500 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100"
+          aria-label="Add category"
         >
           + Add category
         </button>

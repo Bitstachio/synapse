@@ -4,6 +4,7 @@ import { Model } from "mongoose";
 import { CreateFrameworkDto } from "./dto/create-framework.dto";
 import { UpdateFrameworkDto } from "./dto/update-framework.dto";
 import { FrameworkRevisionsService } from "./framework-revisions.service";
+import { normalizeContentToNewShape } from "./revision-enrichment";
 import { Framework } from "./schemas/framework.schema";
 import type { RequestUser } from "../auth/decorators/user.decorator";
 
@@ -108,19 +109,33 @@ export class FrameworksService {
   }
 
   async findAll(): Promise<Framework[]> {
-    return this.frameworkModel.find().sort({ createdAt: -1 }).exec();
+    const list = await this.frameworkModel.find().sort({ createdAt: -1 }).exec();
+    for (const doc of list) {
+      if (doc.content) {
+        const normalized = normalizeContentToNewShape(doc.content as Record<string, unknown>);
+        if (normalized) doc.content = normalized;
+      }
+    }
+    return list;
   }
 
   async findActive(): Promise<Framework> {
     const active = await this.frameworkModel.findOne({ isActive: true }).exec();
     if (!active) throw new NotFoundException("No active framework found");
-
+    if (active.content) {
+      const normalized = normalizeContentToNewShape(active.content as Record<string, unknown>);
+      if (normalized) active.content = normalized;
+    }
     return active;
   }
 
   async findOne(id: string): Promise<Framework> {
     const framework = await this.frameworkModel.findById(id).exec();
     if (!framework) throw new NotFoundException("Framework not found");
+    if (framework.content) {
+      const normalized = normalizeContentToNewShape(framework.content as Record<string, unknown>);
+      if (normalized) framework.content = normalized;
+    }
     return framework;
   }
 
