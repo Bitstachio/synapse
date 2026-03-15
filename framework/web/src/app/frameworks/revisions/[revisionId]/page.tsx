@@ -1,13 +1,16 @@
 "use client";
 
+import CategoryView from "@/components/CategoryView/CategoryView";
 import ChangeCard from "@/components/ChangeCard/ChangeCard";
+import InstructionView from "@/components/InstructionView/InstructionView";
+import SubcategoryView from "@/components/SubcategoryView/SubcategoryView";
 import { ReturnToTop } from "@/components/ReturnToTop/ReturnToTop";
 import { getRevisionById, type RevisionDetail, type RevisionDiffOp } from "@/lib/frameworks-api";
 import type { FrameworkContent } from "@/types/framework";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 
 const REVISION_DETAIL_QUERY_KEY = ["frameworks", "revision"] as const;
 
@@ -90,134 +93,121 @@ function RevisionContextView({
   }
 
   return (
-    <div className="space-y-6 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/30">
-      {Array.from({ length: numCategories }, (_, ci) => {
-        const prevCat = prevCats[ci];
-        const nextCat = nextCats[ci];
-        const cat = nextCat ?? prevCat;
-        if (!cat) return null;
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Categories</h3>
+      <ul className="space-y-3">
+        {Array.from({ length: numCategories }, (_, ci) => {
+          const prevCat = prevCats[ci];
+          const nextCat = nextCats[ci];
+          const cat = nextCat ?? prevCat;
+          if (!cat) return null;
 
-        const categoryPath = `/categories/${ci}`;
-        const categoryOps = opsByItemPath.get(categoryPath) ?? [];
-        const isCategoryAdded = !prevCat && !!nextCat;
+          const categoryPath = `/categories/${ci}`;
+          const categoryOps = opsByItemPath.get(categoryPath) ?? [];
+          const isCategoryAdded = !prevCat && !!nextCat;
 
-        return (
-          <section
-            key={cat.id ?? ci}
-            className={`space-y-3 ${isCategoryAdded ? "rounded-lg border border-emerald-200 bg-emerald-50/30 p-3 dark:border-emerald-800/50 dark:bg-emerald-950/20" : ""}`}
-          >
-            <div>
-              <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
-                {cat.name}
-                {cat.id && <span className="ml-1.5 font-normal text-zinc-500 dark:text-zinc-400">({cat.id})</span>}
-                {isCategoryAdded && <AddedBadge />}
-              </h3>
-              {cat.description && <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{cat.description}</p>}
+          return (
+            <li
+              key={cat.id ?? ci}
+              className={
+                isCategoryAdded
+                  ? "rounded-lg border border-emerald-200 bg-emerald-50/30 dark:border-emerald-800/50 dark:bg-emerald-950/20"
+                  : "rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/30"
+              }
+            >
               {isCategoryAdded && (
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-                  {(cat.subcategories?.length ?? 0) === 0
-                    ? "No subcategories yet"
-                    : `${cat.subcategories!.length} subcategor${cat.subcategories!.length === 1 ? "y" : "ies"}`}
-                </p>
+                <div className="p-4 pb-0">
+                  <AddedBadge />
+                </div>
               )}
-            </div>
-            {!isCategoryAdded && categoryOps.length > 0 && (
-              <div className="space-y-2">
-                {categoryOps.map((op, oi) => (
-                  <ChangeCard
-                    key={`${op.path}-${oi}`}
-                    revision={revision}
-                    op={op}
-                    contentForLabel={contentForLabel}
-                    showLocationLabel={false}
-                  />
-                ))}
-              </div>
-            )}
-            <div className="ml-4 space-y-4 border-l-2 border-zinc-200 pl-4 dark:border-zinc-700">
-              {Array.from(
-                {
-                  length: Math.max(prevCat?.subcategories?.length ?? 0, nextCat?.subcategories?.length ?? 0),
-                },
-                (_, si) => {
-                  const prevSub = prevCat?.subcategories?.[si];
-                  const nextSub = nextCat?.subcategories?.[si];
-                  const sub = nextSub ?? prevSub;
-                  if (!sub) return null;
-
-                  const subcategoryPath = `/categories/${ci}/subcategories/${si}`;
-                  const isSubcategoryAdded = !prevSub && !!nextSub;
-
-                  const prevInsts = prevSub?.instructions ?? [];
-                  const nextInsts = nextSub?.instructions ?? [];
-                  const maxLen = Math.max(prevInsts.length, nextInsts.length);
-
-                  return (
-                    <div key={sub.id ?? si} className="space-y-2">
-                      <h4 className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
-                        {sub.name}
-                        {sub.id && (
-                          <span className="ml-1 font-normal text-zinc-500 dark:text-zinc-400">({sub.id})</span>
-                        )}
-                        {isSubcategoryAdded && <AddedBadge />}
-                      </h4>
-                      <ul className="space-y-2">
-                        {Array.from({ length: maxLen }, (_, ii) => {
-                          const path = `/categories/${ci}/subcategories/${si}/instructions/${ii}`;
-                          const ops = opsByItemPath.get(path) ?? [];
-                          const prevInst = prevInsts[ii];
-                          const nextInst = nextInsts[ii];
-                          const instruction = nextInst ?? prevInst;
-                          const isInstructionAdded = ops.some((o) => o.op === "add");
-
-                          if (ops.length > 0) {
-                            return (
-                              <li key={path}>
-                                {isInstructionAdded && (
-                                  <span className="mb-1 block text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                                    Added
-                                  </span>
-                                )}
-                                <div className="space-y-2">
-                                  {ops.map((op, oi) => (
-                                    <ChangeCard
-                                      key={`${op.path}-${oi}`}
-                                      revision={revision}
-                                      op={op}
-                                      contentForLabel={contentForLabel}
-                                      showLocationLabel={false}
-                                    />
-                                  ))}
-                                </div>
-                              </li>
-                            );
-                          }
-
-                          if (!instruction) return null;
-
-                          return (
-                            <li
-                              key={path}
-                              className="rounded-md border border-zinc-100 bg-zinc-50/50 px-3 py-2 text-sm dark:border-zinc-700/50 dark:bg-zinc-800/30"
-                            >
-                              <p className="text-zinc-800 dark:text-zinc-200">{instruction.description}</p>
-                              {instruction.risk_level && (
-                                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                  Risk level: {instruction.risk_level}
-                                </p>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  );
-                },
+              {!isCategoryAdded && categoryOps.length > 0 && (
+                <div className="space-y-2 p-4 pb-0">
+                  {categoryOps.map((op, oi) => (
+                    <ChangeCard
+                      key={`${op.path}-${oi}`}
+                      revision={revision}
+                      op={op}
+                      contentForLabel={contentForLabel}
+                      showLocationLabel={false}
+                    />
+                  ))}
+                </div>
               )}
-            </div>
-          </section>
-        );
-      })}
+              <CategoryView
+                category={cat}
+                renderSubcategories={() =>
+                  Array.from(
+                    {
+                      length: Math.max(prevCat?.subcategories?.length ?? 0, nextCat?.subcategories?.length ?? 0),
+                    },
+                    (_, si) => {
+                      const prevSub = prevCat?.subcategories?.[si];
+                      const nextSub = nextCat?.subcategories?.[si];
+                      const sub = nextSub ?? prevSub;
+                      if (!sub) return null;
+
+                      const isSubcategoryAdded = !prevSub && !!nextSub;
+                      const prevInsts = prevSub?.instructions ?? [];
+                      const nextInsts = nextSub?.instructions ?? [];
+                      const maxLen = Math.max(prevInsts.length, nextInsts.length);
+
+                      return (
+                        <li key={sub.id ?? si} className="mt-2">
+                          {isSubcategoryAdded && <AddedBadge />}
+                          <SubcategoryView
+                            subcategory={sub}
+                            renderInstructions={() =>
+                              Array.from({ length: maxLen }, (_, ii) => {
+                                const path = `/categories/${ci}/subcategories/${si}/instructions/${ii}`;
+                                const ops = opsByItemPath.get(path) ?? [];
+                                const prevInst = prevInsts[ii];
+                                const nextInst = nextInsts[ii];
+                                const instruction = nextInst ?? prevInst;
+                                const isInstructionAdded = ops.some((o) => o.op === "add");
+
+                                if (ops.length > 0) {
+                                  return (
+                                    <li key={path}>
+                                      {isInstructionAdded && (
+                                        <span className="mb-1 block text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                                          Added
+                                        </span>
+                                      )}
+                                      <div className="space-y-2">
+                                        {ops.map((op, oi) => (
+                                          <ChangeCard
+                                            key={`${op.path}-${oi}`}
+                                            revision={revision}
+                                            op={op}
+                                            contentForLabel={contentForLabel}
+                                            showLocationLabel={false}
+                                          />
+                                        ))}
+                                      </div>
+                                    </li>
+                                  );
+                                }
+
+                                if (!instruction) return null;
+
+                                return (
+                                  <li key={instruction.id ?? path} className="mt-1">
+                                    <InstructionView instruction={instruction} />
+                                  </li>
+                                );
+                              })
+                            }
+                          />
+                        </li>
+                      );
+                    },
+                  )
+                }
+              />
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }
