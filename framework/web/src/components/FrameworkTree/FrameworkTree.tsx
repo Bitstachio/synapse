@@ -10,7 +10,12 @@ import SubcategoryEdit from "../SubcategoryEdit/SubcategoryEdit";
 import SubcategoryView from "../SubcategoryView/SubcategoryView";
 import { EditingTarget } from "./FrameworkTree.types";
 import { shallowCloneFramework } from "./FrameworkTree.utils";
-import { useActiveFramework, useFrameworkById, ACTIVE_FRAMEWORK_QUERY_KEY, frameworkByIdQueryKey } from "./useActiveFramework";
+import {
+  useActiveFramework,
+  useFrameworkById,
+  ACTIVE_FRAMEWORK_QUERY_KEY,
+  frameworkByIdQueryKey,
+} from "./useActiveFramework";
 import { useAuth } from "@/lib/auth-context";
 import {
   createFrameworkVersion,
@@ -216,12 +221,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
   );
 
   const updateInstruction = useCallback(
-    (
-      categoryIndex: number,
-      subcategoryIndex: number,
-      instructionIndex: number,
-      payload: Partial<Instruction>,
-    ) => {
+    (categoryIndex: number, subcategoryIndex: number, instructionIndex: number, payload: Partial<Instruction>) => {
       if (!framework) return;
       const next = shallowCloneFramework(framework);
       const inst =
@@ -242,10 +242,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     (categoryIndex: number, subcategoryIndex: number, instructionIndex: number) => {
       if (!framework) return;
       const next = shallowCloneFramework(framework);
-      next.content.categories[categoryIndex].subcategories[subcategoryIndex].instructions.splice(
-        instructionIndex,
-        1,
-      );
+      next.content.categories[categoryIndex].subcategories[subcategoryIndex].instructions.splice(instructionIndex, 1);
       setFramework(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
@@ -261,15 +258,12 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     }
     if (pendingDelete.type === "subcategory") {
       const sub =
-        framework.content.categories[pendingDelete.categoryIndex]?.subcategories[
-          pendingDelete.subcategoryIndex
-        ];
+        framework.content.categories[pendingDelete.categoryIndex]?.subcategories[pendingDelete.subcategoryIndex];
       return sub?.name ?? "this subcategory";
     }
     const inst =
-      framework.content.categories[pendingDelete.categoryIndex]?.subcategories[
-        pendingDelete.subcategoryIndex
-      ]?.instructions[pendingDelete.instructionIndex];
+      framework.content.categories[pendingDelete.categoryIndex]?.subcategories[pendingDelete.subcategoryIndex]
+        ?.instructions[pendingDelete.instructionIndex];
     if (!inst) return "this instruction";
     if (!inst.description.trim()) return inst.id;
     return inst.description.length > 50 ? inst.description.slice(0, 50) + "…" : inst.description;
@@ -282,11 +276,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     } else if (pendingDelete.type === "subcategory") {
       deleteSubcategory(pendingDelete.categoryIndex, pendingDelete.subcategoryIndex);
     } else {
-      deleteInstruction(
-        pendingDelete.categoryIndex,
-        pendingDelete.subcategoryIndex,
-        pendingDelete.instructionIndex,
-      );
+      deleteInstruction(pendingDelete.categoryIndex, pendingDelete.subcategoryIndex, pendingDelete.instructionIndex);
     }
     setPendingDelete(null);
   }, [pendingDelete, framework, deleteCategory, deleteSubcategory, deleteInstruction]);
@@ -345,9 +335,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
 
   const isEditingCategory = (i: number) => editing?.type === "category" && editing.categoryIndex === i;
   const isEditingSubcategory = (ci: number, si: number) =>
-    editing?.type === "subcategory" &&
-    editing.categoryIndex === ci &&
-    editing.subcategoryIndex === si;
+    editing?.type === "subcategory" && editing.categoryIndex === ci && editing.subcategoryIndex === si;
   const isEditingInstruction = (ci: number, si: number, ii: number) =>
     editing?.type === "instruction" &&
     editing.categoryIndex === ci &&
@@ -391,7 +379,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
       )}
       {conflictMessage && (
         <div
-          className="fixed top-4 left-4 right-4 z-50 mx-auto flex max-w-4xl items-start justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-lg text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100 sm:left-6 sm:right-6"
+          className="fixed top-4 right-4 left-4 z-50 mx-auto flex max-w-4xl items-start justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 shadow-lg sm:right-6 sm:left-6 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
           role="alert"
         >
           <p className="text-sm font-medium">{conflictMessage}</p>
@@ -446,112 +434,113 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
           </div>
         ) : (
           <>
-        <ul className="space-y-3">
-          {framework.content.categories.map((cat, categoryIndex) => (
-            <li
-              key={cat.id}
-              className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/30"
+            <ul className="space-y-3">
+              {framework.content.categories.map((cat, categoryIndex) => (
+                <li
+                  key={cat.id}
+                  className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/30"
+                >
+                  {isEditingCategory(categoryIndex) ? (
+                    <CategoryEdit
+                      category={cat}
+                      onSave={(payload) => updateCategory(categoryIndex, payload)}
+                      onCancel={handleCancel}
+                      onDelete={() => setPendingDelete({ type: "category", categoryIndex })}
+                    />
+                  ) : (
+                    <CategoryView
+                      category={cat}
+                      isEditable
+                      onEdit={() => setEditing({ type: "category", categoryIndex })}
+                      onAddSubcategory={() => addSubcategory(categoryIndex)}
+                      renderSubcategories={() =>
+                        cat.subcategories.map((sub, subcategoryIndex) => (
+                          <li key={sub.id} className="mt-2">
+                            {isEditingSubcategory(categoryIndex, subcategoryIndex) ? (
+                              <SubcategoryEdit
+                                subcategory={sub}
+                                onSave={(payload) => updateSubcategory(categoryIndex, subcategoryIndex, payload)}
+                                onCancel={handleCancel}
+                                onDelete={() =>
+                                  setPendingDelete({
+                                    type: "subcategory",
+                                    categoryIndex,
+                                    subcategoryIndex,
+                                  })
+                                }
+                              />
+                            ) : (
+                              <SubcategoryView
+                                subcategory={sub}
+                                isEditable
+                                onEdit={() =>
+                                  setEditing({
+                                    type: "subcategory",
+                                    categoryIndex,
+                                    subcategoryIndex,
+                                  })
+                                }
+                                onAddInstruction={() => addInstruction(categoryIndex, subcategoryIndex)}
+                                renderInstructions={() =>
+                                  sub.instructions.map((inst, instructionIndex) => (
+                                    <li key={inst.id} className="mt-1">
+                                      {isEditingInstruction(categoryIndex, subcategoryIndex, instructionIndex) ? (
+                                        <InstructionEdit
+                                          instruction={inst}
+                                          onSave={(payload) =>
+                                            updateInstruction(
+                                              categoryIndex,
+                                              subcategoryIndex,
+                                              instructionIndex,
+                                              payload,
+                                            )
+                                          }
+                                          onCancel={handleCancel}
+                                          onDelete={() =>
+                                            setPendingDelete({
+                                              type: "instruction",
+                                              categoryIndex,
+                                              subcategoryIndex,
+                                              instructionIndex,
+                                            })
+                                          }
+                                        />
+                                      ) : (
+                                        <InstructionView
+                                          instruction={inst}
+                                          isEditable
+                                          onEdit={() =>
+                                            setEditing({
+                                              type: "instruction",
+                                              categoryIndex,
+                                              subcategoryIndex,
+                                              instructionIndex,
+                                            })
+                                          }
+                                        />
+                                      )}
+                                    </li>
+                                  ))
+                                }
+                              />
+                            )}
+                          </li>
+                        ))
+                      }
+                    />
+                  )}
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={addCategory}
+              disabled={saveMutation.isPending}
+              className="mt-3 w-full rounded-lg border border-dashed border-zinc-300 py-3 text-sm font-medium text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-500 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100"
+              aria-label="Add category"
             >
-              {isEditingCategory(categoryIndex) ? (
-                <CategoryEdit
-                  category={cat}
-                  onSave={(payload) => updateCategory(categoryIndex, payload)}
-                  onCancel={handleCancel}
-                  onDelete={() => setPendingDelete({ type: "category", categoryIndex })}
-                />
-              ) : (
-                <CategoryView
-                  category={cat}
-                  onEdit={() => setEditing({ type: "category", categoryIndex })}
-                  onAddSubcategory={() => addSubcategory(categoryIndex)}
-                  renderSubcategories={() =>
-                    cat.subcategories.map((sub, subcategoryIndex) => (
-                      <li key={sub.id} className="mt-2">
-                        {isEditingSubcategory(categoryIndex, subcategoryIndex) ? (
-                          <SubcategoryEdit
-                            subcategory={sub}
-                            onSave={(payload) =>
-                              updateSubcategory(categoryIndex, subcategoryIndex, payload)
-                            }
-                            onCancel={handleCancel}
-                            onDelete={() =>
-                              setPendingDelete({
-                                type: "subcategory",
-                                categoryIndex,
-                                subcategoryIndex,
-                              })
-                            }
-                          />
-                        ) : (
-                          <SubcategoryView
-                            subcategory={sub}
-                            onEdit={() =>
-                              setEditing({
-                                type: "subcategory",
-                                categoryIndex,
-                                subcategoryIndex,
-                              })
-                            }
-                            onAddInstruction={() => addInstruction(categoryIndex, subcategoryIndex)}
-                            renderInstructions={() =>
-                              sub.instructions.map((inst, instructionIndex) => (
-                                <li key={inst.id} className="mt-1">
-                                  {isEditingInstruction(categoryIndex, subcategoryIndex, instructionIndex) ? (
-                                    <InstructionEdit
-                                      instruction={inst}
-                                      onSave={(payload) =>
-                                        updateInstruction(
-                                          categoryIndex,
-                                          subcategoryIndex,
-                                          instructionIndex,
-                                          payload,
-                                        )
-                                      }
-                                      onCancel={handleCancel}
-                                      onDelete={() =>
-                                        setPendingDelete({
-                                          type: "instruction",
-                                          categoryIndex,
-                                          subcategoryIndex,
-                                          instructionIndex,
-                                        })
-                                      }
-                                    />
-                                  ) : (
-                                    <InstructionView
-                                      instruction={inst}
-                                      onEdit={() =>
-                                        setEditing({
-                                          type: "instruction",
-                                          categoryIndex,
-                                          subcategoryIndex,
-                                          instructionIndex,
-                                        })
-                                      }
-                                    />
-                                  )}
-                                </li>
-                              ))
-                            }
-                          />
-                        )}
-                      </li>
-                    ))
-                  }
-                />
-              )}
-            </li>
-          ))}
-        </ul>
-        <button
-          type="button"
-          onClick={addCategory}
-          disabled={saveMutation.isPending}
-          className="mt-3 w-full rounded-lg border border-dashed border-zinc-300 py-3 text-sm font-medium text-zinc-600 hover:border-zinc-400 hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-500 dark:hover:bg-zinc-800/50 dark:hover:text-zinc-100"
-          aria-label="Add category"
-        >
-          + Add category
-        </button>
+              + Add category
+            </button>
           </>
         )}
       </div>
