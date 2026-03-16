@@ -1,21 +1,5 @@
 "use client";
 
-import type { Category, Framework, Instruction, Subcategory } from "@/types/framework";
-import { useCallback, useEffect, useState } from "react";
-import CategoryEdit from "../CategoryEdit/CategoryEdit";
-import CategoryView from "../CategoryView/CategoryView";
-import InstructionEdit from "../InstructionEdit/InstructionEdit";
-import InstructionView from "../InstructionView/InstructionView";
-import SubcategoryEdit from "../SubcategoryEdit/SubcategoryEdit";
-import SubcategoryView from "../SubcategoryView/SubcategoryView";
-import { EditingTarget } from "./FrameworkTree.types";
-import { shallowCloneFramework } from "./FrameworkTree.utils";
-import {
-  useActiveFramework,
-  useFrameworkById,
-  ACTIVE_FRAMEWORK_QUERY_KEY,
-  frameworkByIdQueryKey,
-} from "./useActiveFramework";
 import { useAuth } from "@/lib/auth-context";
 import {
   createFrameworkVersion,
@@ -23,7 +7,23 @@ import {
   updateFrameworkVersion,
   type FrameworkWritePayload,
 } from "@/lib/frameworks-api";
+import type { Category, Framework, Instruction, Subcategory } from "@/types/framework";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
+import CategoryEdit from "../CategoryEdit/CategoryEdit";
+import CategoryView from "../CategoryView/CategoryView";
+import InstructionEdit from "../InstructionEdit/InstructionEdit";
+import EditableInstructionView from "../InstructionView/EditableInstructionView";
+import SubcategoryEdit from "../SubcategoryEdit/SubcategoryEdit";
+import SubcategoryView from "../SubcategoryView/SubcategoryView";
+import { EditingTarget } from "./FrameworkTree.types";
+import { shallowCloneFramework } from "./FrameworkTree.utils";
+import {
+  ACTIVE_FRAMEWORK_QUERY_KEY,
+  frameworkByIdQueryKey,
+  useActiveFramework,
+  useFrameworkById,
+} from "./useActiveFramework";
 
 type FrameworkTreeProps = {
   /** When set, load and edit this framework by ID instead of the active one. */
@@ -506,9 +506,8 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                                           }
                                         />
                                       ) : (
-                                        <InstructionView
+                                        <EditableInstructionView
                                           instruction={inst}
-                                          isEditable
                                           onEdit={() =>
                                             setEditing({
                                               type: "instruction",
