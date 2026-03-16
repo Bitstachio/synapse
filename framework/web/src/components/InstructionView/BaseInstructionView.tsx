@@ -1,8 +1,8 @@
-import { Instruction } from "@/types/framework";
+import { BaseInstruction } from "@/types/framework";
 import { ReactNode } from "react";
 
-type BaseInstructionViewProps = Pick<Instruction, "id" | "risk_level"> & {
-  renderActions: () => ReactNode;
+type BaseInstructionViewProps = BaseInstruction & {
+  renderActions?: () => ReactNode;
   renderContent: () => ReactNode;
 };
 
@@ -20,7 +20,7 @@ const BaseInstructionView = ({ id, risk_level, renderActions, renderContent }: B
         </span>
         {renderContent()}
       </div>
-      {renderActions()}
+      {renderActions?.()}
     </div>
   );
 };
