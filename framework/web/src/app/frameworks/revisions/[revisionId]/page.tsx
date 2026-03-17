@@ -2,7 +2,7 @@
 
 import CategoryView from "@/components/CategoryView/CategoryView";
 import ChangeCardLegacy from "@/components/ChangeCard/ChangeCardLegacy";
-import InstructionView from "@/components/InstructionView/InstructionView";
+import InstructionView from "@/components/instruction-views/InstructionView";
 import SubcategoryView from "@/components/SubcategoryView/SubcategoryView";
 import { ReturnToTop } from "@/components/ReturnToTop/ReturnToTop";
 import { getRevisionById, type RevisionDetail, type RevisionDiffOp } from "@/lib/frameworks-api";

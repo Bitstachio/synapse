@@ -1,6 +1,6 @@
 import { Instruction } from "@/types/framework";
-import BaseInstructionView from "./BaseInstructionView";
-import InstructionContentView from "./InstructionContentView";
+import BaseInstructionView from "../BaseInstructionView/BaseInstructionView";
+import InstructionContentView from "../InstructionContentView/InstructionContentView";
 
 type EditableInstructionViewProps = {
   instruction: Instruction;

@@ -1,8 +1,8 @@
 import { Instruction } from "@/types/framework";
-import ChangeCard from "../ChangeCard/ChangeCard";
-import BaseInstructionView from "./BaseInstructionView";
-import InstructionContentView from "./InstructionContentView";
-import RevisionOpBadge from "../RevisionOpBadge/RevisionOpBadge";
+import ChangeCard from "../../ChangeCard/ChangeCard";
+import BaseInstructionView from "../BaseInstructionView/BaseInstructionView";
+import InstructionContentView from "../InstructionContentView/InstructionContentView";
+import RevisionOpBadge from "../../RevisionOpBadge/RevisionOpBadge";
 
 type AddProps = {
   op: "add";
