@@ -3,9 +3,9 @@ import { ReactNode } from "react";
 
 type BaseInstructionViewProps = {
   classExtension?: string;
-  renderLabel?: () => ReactNode;
-  renderActions?: () => ReactNode;
-  renderContent: () => ReactNode;
+  renderLabel?: ReactNode;
+  renderActions?: ReactNode;
+  renderContent: ReactNode;
 };
 
 const BaseInstructionView = ({
@@ -25,11 +25,11 @@ const BaseInstructionView = ({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1">
           <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Instruction</p>
-          {renderLabel?.()}
+          {renderLabel}
         </div>
-        {renderContent()}
+        {renderContent}
       </div>
-      {renderActions?.()}
+      {renderActions}
     </div>
   );
 };

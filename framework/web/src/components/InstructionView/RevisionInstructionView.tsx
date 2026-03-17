@@ -25,8 +25,8 @@ type RevisionInstructionViewProps = AddProps | DeleteProps | UpdateProps;
 const RevisionInstructionView = (props: RevisionInstructionViewProps) => {
   return (
     <BaseInstructionView
-      renderLabel={() => <RevisionOpBadge op={props.op} />}
-      renderContent={() =>
+      renderLabel={<RevisionOpBadge op={props.op} />}
+      renderContent={
         props.op === "add" || props.op === "delete" ? (
           <InstructionContentView
             id={props.instruction.id}

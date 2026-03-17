@@ -24,6 +24,7 @@ import {
   useActiveFramework,
   useFrameworkById,
 } from "./useActiveFramework";
+import RevisionInstructionView from "../InstructionView/RevisionInstructionView";
 
 type FrameworkTreeProps = {
   /** When set, load and edit this framework by ID instead of the active one. */
@@ -506,17 +507,18 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                                           }
                                         />
                                       ) : (
-                                        <EditableInstructionView
-                                          instruction={inst}
-                                          onEdit={() =>
-                                            setEditing({
-                                              type: "instruction",
-                                              categoryIndex,
-                                              subcategoryIndex,
-                                              instructionIndex,
-                                            })
-                                          }
-                                        />
+                                        // <EditableInstructionView
+                                        //   instruction={inst}
+                                        //   onEdit={() =>
+                                        //     setEditing({
+                                        //       type: "instruction",
+                                        //       categoryIndex,
+                                        //       subcategoryIndex,
+                                        //       instructionIndex,
+                                        //     })
+                                        //   }
+                                        // />
+                                        <RevisionInstructionView op={"add"} instruction={inst} />
                                       )}
                                     </li>
                                   ))
