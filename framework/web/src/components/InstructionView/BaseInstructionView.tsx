@@ -10,7 +10,7 @@ type BaseInstructionViewProps = {
 
 const BaseInstructionView = ({
   classExtension,
-  renderLabel, // TODO: Incorporate into layout
+  renderLabel,
   renderActions,
   renderContent,
 }: BaseInstructionViewProps) => {
@@ -23,7 +23,10 @@ const BaseInstructionView = ({
       )}
     >
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Instruction</p>
+        <div className="flex items-center gap-1">
+          <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Instruction</p>
+          {renderLabel?.()}
+        </div>
         {renderContent()}
       </div>
       {renderActions?.()}
