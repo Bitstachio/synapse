@@ -1,7 +1,7 @@
 "use client";
 
 import CategoryView from "@/components/CategoryView/CategoryView";
-import ChangeCard from "@/components/ChangeCard/ChangeCard";
+import ChangeCardLegacy from "@/components/ChangeCard/ChangeCardLegacy";
 import InstructionView from "@/components/InstructionView/InstructionView";
 import SubcategoryView from "@/components/SubcategoryView/SubcategoryView";
 import { ReturnToTop } from "@/components/ReturnToTop/ReturnToTop";
@@ -123,7 +123,7 @@ function RevisionContextView({
               {!isCategoryAdded && categoryOps.length > 0 && (
                 <div className="space-y-2 p-4 pb-0">
                   {categoryOps.map((op, oi) => (
-                    <ChangeCard
+                    <ChangeCardLegacy
                       key={`${op.path}-${oi}`}
                       revision={revision}
                       op={op}
@@ -175,7 +175,7 @@ function RevisionContextView({
                                       )}
                                       <div className="space-y-2">
                                         {ops.map((op, oi) => (
-                                          <ChangeCard
+                                          <ChangeCardLegacy
                                             key={`${op.path}-${oi}`}
                                             revision={revision}
                                             op={op}
@@ -365,7 +365,7 @@ export default function RevisionDiffPage() {
                     key={`${op.path}-${idx}`}
                     className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/30"
                   >
-                    <ChangeCard
+                    <ChangeCardLegacy
                       revision={revision}
                       op={op}
                       contentForLabel={contentForLabel}
