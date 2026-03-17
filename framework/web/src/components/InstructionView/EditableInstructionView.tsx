@@ -1,5 +1,6 @@
 import { Instruction } from "@/types/framework";
 import BaseInstructionView from "./BaseInstructionView";
+import InstructionContentView from "./InstructionContentView";
 
 type EditableInstructionViewProps = {
   instruction: Instruction;
@@ -21,7 +22,13 @@ const EditableInstructionView = ({ instruction, onEdit }: EditableInstructionVie
           Edit
         </button>
       )}
-      renderContent={() => <p className="mt-0.5 text-sm text-zinc-700 dark:text-zinc-300">{instruction.description}</p>}
+      renderContent={() => (
+        <InstructionContentView
+          id={instruction.id}
+          riskLevel={instruction.risk_level}
+          description={instruction.description}
+        />
+      )}
     />
   );
 };
