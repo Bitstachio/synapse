@@ -1,10 +1,8 @@
 import { Instruction } from "@/types/framework";
 import ChangeCard from "../ChangeCard/ChangeCard";
-import AddedBadge from "../revision-badges/AddedBadge/AddedBadge";
-import DeletedBadge from "../revision-badges/DeletedBadge/DeletedBadge";
-import UpdatedBadge from "../revision-badges/UpdatedBadge/UpdatedBadge";
 import BaseInstructionView from "./BaseInstructionView";
 import InstructionContentView from "./InstructionContentView";
+import RevisionOpBadge from "../RevisionOpBadge/RevisionOpBadge";
 
 type AddProps = {
   op: "add";
@@ -24,21 +22,10 @@ type UpdateProps = {
 
 type RevisionInstructionViewProps = AddProps | DeleteProps | UpdateProps;
 
-const renderLabel = (op: RevisionInstructionViewProps["op"]) => {
-  switch (op) {
-    case "add":
-      return <AddedBadge />;
-    case "delete":
-      return <DeletedBadge />;
-    case "update":
-      return <UpdatedBadge />;
-  }
-};
-
 const RevisionInstructionView = (props: RevisionInstructionViewProps) => {
   return (
     <BaseInstructionView
-      renderLabel={() => renderLabel(props.op)}
+      renderLabel={() => <RevisionOpBadge op={props.op} />}
       renderContent={() =>
         props.op === "add" || props.op === "delete" ? (
           <InstructionContentView
