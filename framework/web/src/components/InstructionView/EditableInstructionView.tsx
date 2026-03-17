@@ -10,8 +10,6 @@ type EditableInstructionViewProps = {
 const EditableInstructionView = ({ instruction, onEdit }: EditableInstructionViewProps) => {
   return (
     <BaseInstructionView
-      id={instruction.id}
-      risk_level={instruction.risk_level}
       renderActions={() => (
         <button
           type="button"

@@ -6,8 +6,6 @@ export interface Instruction {
   risk_level: RiskLevel;
 }
 
-export type BaseInstruction = Pick<Instruction, "id" | "risk_level">;
-
 export interface Subcategory {
   id: string;
   name: string;

@@ -1,8 +1,7 @@
 import { cn } from "@/lib/tailwind";
-import { BaseInstruction } from "@/types/framework";
 import { ReactNode } from "react";
 
-type BaseInstructionViewProps = BaseInstruction & {
+type BaseInstructionViewProps = {
   classExtension?: string;
   renderLabel?: () => ReactNode;
   renderActions?: () => ReactNode;
@@ -10,8 +9,6 @@ type BaseInstructionViewProps = BaseInstruction & {
 };
 
 const BaseInstructionView = ({
-  id,
-  risk_level,
   classExtension,
   renderLabel, // TODO: Incorporate into layout
   renderActions,
