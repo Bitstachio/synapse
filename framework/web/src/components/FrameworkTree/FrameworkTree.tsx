@@ -15,7 +15,7 @@ import CategoryView from "../CategoryView/CategoryView";
 import InstructionEdit from "../InstructionEdit/InstructionEdit";
 import EditableInstructionView from "../InstructionView/EditableInstructionView";
 import SubcategoryEdit from "../SubcategoryEdit/SubcategoryEdit";
-import SubcategoryView from "../SubcategoryView/SubcategoryView";
+import SubcategoryView from "../subcategory-views/SubcategoryView";
 import { EditingTarget } from "./FrameworkTree.types";
 import { shallowCloneFramework } from "./FrameworkTree.utils";
 import {
