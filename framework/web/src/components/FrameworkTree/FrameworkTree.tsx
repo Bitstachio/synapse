@@ -11,8 +11,10 @@ import type { Category, Framework, Instruction, Subcategory } from "@/types/fram
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import CategoryEdit from "../CategoryEdit/CategoryEdit";
-import CategoryView from "../CategoryView/CategoryView";
+import EditableCategoryView from "../CategoryView/EditableCategoryView/EditableCategoryView";
+import InstructionEdit from "../InstructionEdit/InstructionEdit";
 import SubcategoryEdit from "../SubcategoryEdit/SubcategoryEdit";
+import EditableInstructionView from "../instruction-views/EditableInstructionView/EditableInstructionView";
 import EditableSubcategoryView from "../subcategory-views/EditableSubcategoryView/EditableSubcategoryView";
 import { EditingTarget } from "./FrameworkTree.types";
 import { shallowCloneFramework } from "./FrameworkTree.utils";
@@ -433,28 +435,30 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
         ) : (
           <>
             <ul className="space-y-3">
-              {framework.content.categories.map((cat, categoryIndex) => (
-                <li
-                  key={cat.id}
-                  className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/30"
-                >
-                  {isEditingCategory(categoryIndex) ? (
+              {framework.content.categories.map((cat, categoryIndex) =>
+                isEditingCategory(categoryIndex) ? (
+                  <li
+                    key={cat.id}
+                    className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/30"
+                  >
                     <CategoryEdit
                       category={cat}
                       onSave={(payload) => updateCategory(categoryIndex, payload)}
                       onCancel={handleCancel}
                       onDelete={() => setPendingDelete({ type: "category", categoryIndex })}
                     />
-                  ) : (
-                    <CategoryView
-                      category={cat}
-                      isEditable
-                      onEdit={() => setEditing({ type: "category", categoryIndex })}
-                      onAddSubcategory={() => addSubcategory(categoryIndex)}
-                      renderSubcategories={() =>
-                        cat.subcategories.map((sub, subcategoryIndex) => (
-                          <li key={sub.id} className="mt-2">
-                            {isEditingSubcategory(categoryIndex, subcategoryIndex) ? (
+                  </li>
+                ) : (
+                  <EditableCategoryView
+                    key={cat.id}
+                    category={cat}
+                    onEdit={() => setEditing({ type: "category", categoryIndex })}
+                    onAddSubcategory={() => addSubcategory(categoryIndex)}
+                  >
+                    {cat.subcategories.length > 0
+                      ? cat.subcategories.map((sub, subcategoryIndex) =>
+                          isEditingSubcategory(categoryIndex, subcategoryIndex) ? (
+                            <li key={sub.id}>
                               <SubcategoryEdit
                                 subcategory={sub}
                                 onSave={(payload) => updateSubcategory(categoryIndex, subcategoryIndex, payload)}
@@ -467,73 +471,68 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                                   })
                                 }
                               />
-                            ) : (
-                              <EditableSubcategoryView
-                                subcategory={sub}
-                                onEdit={() => setEditing({ type: "subcategory", categoryIndex, subcategoryIndex })}
-                                onAddInstruction={() => {}}
-                              />
-                              // <SubcategoryView
-                              //   subcategory={sub}
-                              //   isEditable
-                              //   onEdit={() =>
-                              //     setEditing({
-                              //       type: "subcategory",
-                              //       categoryIndex,
-                              //       subcategoryIndex,
-                              //     })
-                              //   }
-                              //   onAddInstruction={() => addInstruction(categoryIndex, subcategoryIndex)}
-                              //   renderInstructions={() =>
-                              //     sub.instructions.map((inst, instructionIndex) => (
-                              //       <li key={inst.id} className="mt-1">
-                              //         {isEditingInstruction(categoryIndex, subcategoryIndex, instructionIndex) ? (
-                              //           <InstructionEdit
-                              //             instruction={inst}
-                              //             onSave={(payload) =>
-                              //               updateInstruction(
-                              //                 categoryIndex,
-                              //                 subcategoryIndex,
-                              //                 instructionIndex,
-                              //                 payload,
-                              //               )
-                              //             }
-                              //             onCancel={handleCancel}
-                              //             onDelete={() =>
-                              //               setPendingDelete({
-                              //                 type: "instruction",
-                              //                 categoryIndex,
-                              //                 subcategoryIndex,
-                              //                 instructionIndex,
-                              //               })
-                              //             }
-                              //           />
-                              //         ) : (
-                              //           // <EditableInstructionView
-                              //           //   instruction={inst}
-                              //           //   onEdit={() =>
-                              //           //     setEditing({
-                              //           //       type: "instruction",
-                              //           //       categoryIndex,
-                              //           //       subcategoryIndex,
-                              //           //       instructionIndex,
-                              //           //     })
-                              //           //   }
-                              //           // />
-                              //           <RevisionInstructionView op={"add"} instruction={inst} />
-                              //         )}
-                              //       </li>
-                              //     ))
-                              //   }
-                              // />
-                            )}
-                          </li>
-                        ))
-                      }
-                    />
-                  )}
-                </li>
-              ))}
+                            </li>
+                          ) : (
+                            <EditableSubcategoryView
+                              key={sub.id}
+                              subcategory={sub}
+                              onEdit={() =>
+                                setEditing({
+                                  type: "subcategory",
+                                  categoryIndex,
+                                  subcategoryIndex,
+                                })
+                              }
+                              onAddInstruction={() => addInstruction(categoryIndex, subcategoryIndex)}
+                            >
+                              {sub.instructions.length > 0
+                                ? sub.instructions.map((inst, instructionIndex) =>
+                                    isEditingInstruction(categoryIndex, subcategoryIndex, instructionIndex) ? (
+                                      <li key={inst.id}>
+                                        <InstructionEdit
+                                          instruction={inst}
+                                          onSave={(payload) =>
+                                            updateInstruction(
+                                              categoryIndex,
+                                              subcategoryIndex,
+                                              instructionIndex,
+                                              payload,
+                                            )
+                                          }
+                                          onCancel={handleCancel}
+                                          onDelete={() =>
+                                            setPendingDelete({
+                                              type: "instruction",
+                                              categoryIndex,
+                                              subcategoryIndex,
+                                              instructionIndex,
+                                            })
+                                          }
+                                        />
+                                      </li>
+                                    ) : (
+                                      <EditableInstructionView
+                                        key={inst.id}
+                                        instruction={inst}
+                                        onEdit={() =>
+                                          setEditing({
+                                            type: "instruction",
+                                            categoryIndex,
+                                            subcategoryIndex,
+                                            instructionIndex,
+                                          })
+                                        }
+                                      />
+                                    ),
+                                  )
+                                : null}
+                            </EditableSubcategoryView>
+                          ),
+                        )
+                      : null}
+                  </EditableCategoryView>
+                ),
+              )}
             </ul>
             <button
               type="button"
