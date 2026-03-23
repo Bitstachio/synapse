@@ -1,12 +1,9 @@
 "use client";
 
-import CategoryView from "@/components/CategoryView/CategoryView";
 import ChangeCardLegacy from "@/components/ChangeCard/ChangeCardLegacy";
-import InstructionView from "@/components/instruction-views/InstructionView";
-import SubcategoryView from "@/components/subcategory-views/SubcategoryView";
+import { FrameworkRevisionTree } from "@/components/FrameworkTree/FrameworkRevisionTree";
 import { ReturnToTop } from "@/components/ReturnToTop/ReturnToTop";
 import { getRevisionById, type RevisionDetail, type RevisionDiffOp } from "@/lib/frameworks-api";
-import type { FrameworkContent } from "@/types/framework";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -29,187 +26,6 @@ function formatDateTime(iso: string): string {
 function getDisplayableDiff(diff: RevisionDiffOp[] | undefined): RevisionDiffOp[] {
   if (!diff?.length) return [];
   return diff.filter((op) => op.op !== "test");
-}
-
-/** Path up to and including the item (e.g. /categories/0/subcategories/0/instructions/3 for an instruction) */
-function getItemPath(path: string): string {
-  const segments = path.split("/").filter(Boolean);
-  const instIdx = segments.indexOf("instructions");
-  if (instIdx >= 0 && segments[instIdx + 1] !== undefined) {
-    return "/" + segments.slice(0, instIdx + 2).join("/");
-  }
-  const subIdx = segments.indexOf("subcategories");
-  if (subIdx >= 0 && segments[subIdx + 1] !== undefined) {
-    return "/" + segments.slice(0, subIdx + 2).join("/");
-  }
-  const catIdx = segments.indexOf("categories");
-  if (catIdx >= 0 && segments[catIdx + 1] !== undefined) {
-    return "/" + segments.slice(0, catIdx + 2).join("/");
-  }
-  return path;
-}
-
-/** Group displayable ops by item path for in-context view */
-function groupOpsByItemPath(ops: RevisionDiffOp[]): Map<string, RevisionDiffOp[]> {
-  const map = new Map<string, RevisionDiffOp[]>();
-  for (const op of ops) {
-    const key = getItemPath(op.path);
-    const list = map.get(key) ?? [];
-    list.push(op);
-    map.set(key, list);
-  }
-  return map;
-}
-
-/** Small "Added" badge for in-context view */
-function AddedBadge() {
-  return (
-    <span className="ml-2 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200">
-      Added
-    </span>
-  );
-}
-
-/** Full framework tree with change cards in place of changed items */
-function RevisionContextView({
-  revision,
-  contentForLabel,
-  displayableOps,
-}: {
-  revision: RevisionDetail;
-  contentForLabel: FrameworkContent | undefined;
-  displayableOps: RevisionDiffOp[];
-}) {
-  const prev = revision.previousContent;
-  const next = revision.newContent;
-  const opsByItemPath = groupOpsByItemPath(displayableOps);
-
-  const prevCats = prev?.categories ?? [];
-  const nextCats = next?.categories ?? [];
-  const numCategories = Math.max(prevCats.length, nextCats.length);
-
-  if (numCategories === 0) {
-    return <p className="text-sm text-zinc-500 dark:text-zinc-400">No framework content to show in context.</p>;
-  }
-
-  return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Categories</h3>
-      <ul className="space-y-3">
-        {Array.from({ length: numCategories }, (_, ci) => {
-          const prevCat = prevCats[ci];
-          const nextCat = nextCats[ci];
-          const cat = nextCat ?? prevCat;
-          if (!cat) return null;
-
-          const categoryPath = `/categories/${ci}`;
-          const categoryOps = opsByItemPath.get(categoryPath) ?? [];
-          const isCategoryAdded = !prevCat && !!nextCat;
-
-          return (
-            <li
-              key={cat.id ?? ci}
-              className={
-                isCategoryAdded
-                  ? "rounded-lg border border-emerald-200 bg-emerald-50/30 dark:border-emerald-800/50 dark:bg-emerald-950/20"
-                  : "rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/30"
-              }
-            >
-              {isCategoryAdded && (
-                <div className="p-4 pb-0">
-                  <AddedBadge />
-                </div>
-              )}
-              {!isCategoryAdded && categoryOps.length > 0 && (
-                <div className="space-y-2 p-4 pb-0">
-                  {categoryOps.map((op, oi) => (
-                    <ChangeCardLegacy
-                      key={`${op.path}-${oi}`}
-                      revision={revision}
-                      op={op}
-                      contentForLabel={contentForLabel}
-                      showLocationLabel={false}
-                    />
-                  ))}
-                </div>
-              )}
-              <CategoryView
-                category={cat}
-                renderSubcategories={() =>
-                  Array.from(
-                    {
-                      length: Math.max(prevCat?.subcategories?.length ?? 0, nextCat?.subcategories?.length ?? 0),
-                    },
-                    (_, si) => {
-                      const prevSub = prevCat?.subcategories?.[si];
-                      const nextSub = nextCat?.subcategories?.[si];
-                      const sub = nextSub ?? prevSub;
-                      if (!sub) return null;
-
-                      const isSubcategoryAdded = !prevSub && !!nextSub;
-                      const prevInsts = prevSub?.instructions ?? [];
-                      const nextInsts = nextSub?.instructions ?? [];
-                      const maxLen = Math.max(prevInsts.length, nextInsts.length);
-
-                      return (
-                        <li key={sub.id ?? si} className="mt-2">
-                          {isSubcategoryAdded && <AddedBadge />}
-                          <SubcategoryView
-                            subcategory={sub}
-                            renderInstructions={() =>
-                              Array.from({ length: maxLen }, (_, ii) => {
-                                const path = `/categories/${ci}/subcategories/${si}/instructions/${ii}`;
-                                const ops = opsByItemPath.get(path) ?? [];
-                                const prevInst = prevInsts[ii];
-                                const nextInst = nextInsts[ii];
-                                const instruction = nextInst ?? prevInst;
-                                const isInstructionAdded = ops.some((o) => o.op === "add");
-
-                                if (ops.length > 0) {
-                                  return (
-                                    <li key={path}>
-                                      {isInstructionAdded && (
-                                        <span className="mb-1 block text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                                          Added
-                                        </span>
-                                      )}
-                                      <div className="space-y-2">
-                                        {ops.map((op, oi) => (
-                                          <ChangeCardLegacy
-                                            key={`${op.path}-${oi}`}
-                                            revision={revision}
-                                            op={op}
-                                            contentForLabel={contentForLabel}
-                                            showLocationLabel={false}
-                                          />
-                                        ))}
-                                      </div>
-                                    </li>
-                                  );
-                                }
-
-                                if (!instruction) return null;
-
-                                return (
-                                  <li key={instruction.id ?? path} className="mt-1">
-                                    <InstructionView instruction={instruction} />
-                                  </li>
-                                );
-                              })
-                            }
-                          />
-                        </li>
-                      );
-                    },
-                  )
-                }
-              />
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
 }
 
 export default function RevisionDiffPage() {
@@ -375,11 +191,7 @@ export default function RevisionDiffPage() {
                 ))}
               </ul>
             ) : (
-              <RevisionContextView
-                revision={revision}
-                contentForLabel={contentForLabel}
-                displayableOps={displayableOps}
-              />
+              <FrameworkRevisionTree revision={revision} displayableOps={displayableOps} />
             )}
           </div>
         )}

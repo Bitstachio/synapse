@@ -2,6 +2,7 @@ import AddedFrameworkNode from "@/components/framework-nodes/revision-nodes/Adde
 import DeletedFrameworkNode from "@/components/framework-nodes/revision-nodes/DeletedFrameworkNode/DeletedFrameworkNode";
 import UpdatedFrameworkNode from "@/components/framework-nodes/revision-nodes/UpdatedFrameworkNode/UpdatedFrameworkNode";
 import { Subcategory } from "@/types/framework";
+import { ReactNode } from "react";
 import SubcategoryContentView from "../SubcategoryContentView/SubcategoryContentView";
 
 type AddProps = {
@@ -20,20 +21,24 @@ type UpdateProps = {
   after: Subcategory;
 };
 
-type RevisionInstructionViewProps = AddProps | DeleteProps | UpdateProps;
+type RevisionSubcategoryViewProps = (AddProps | DeleteProps | UpdateProps) & { children?: ReactNode };
 
-const RevisionSubcategoryView = (props: RevisionInstructionViewProps) =>
+const RevisionSubcategoryView = (props: RevisionSubcategoryViewProps) =>
   props.op === "added" ? (
-    <AddedFrameworkNode content={<SubcategoryContentView id={props.subcategory.id} name={props.subcategory.name} />} />
+    <AddedFrameworkNode content={<SubcategoryContentView id={props.subcategory.id} name={props.subcategory.name} />}>
+      {props.children}
+    </AddedFrameworkNode>
   ) : props.op === "deleted" ? (
-    <DeletedFrameworkNode
-      content={<SubcategoryContentView id={props.subcategory.id} name={props.subcategory.name} />}
-    />
+    <DeletedFrameworkNode content={<SubcategoryContentView id={props.subcategory.id} name={props.subcategory.name} />}>
+      {props.children}
+    </DeletedFrameworkNode>
   ) : props.op === "updated" ? (
     <UpdatedFrameworkNode
       before={<SubcategoryContentView id={props.before.id} name={props.before.name} />}
       after={<SubcategoryContentView id={props.after.id} name={props.after.name} />}
-    />
+    >
+      {props.children}
+    </UpdatedFrameworkNode>
   ) : null;
 
 export default RevisionSubcategoryView;

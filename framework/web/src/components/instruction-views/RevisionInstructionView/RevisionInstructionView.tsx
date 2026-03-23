@@ -2,6 +2,7 @@ import AddedFrameworkNode from "@/components/framework-nodes/revision-nodes/Adde
 import DeletedFrameworkNode from "@/components/framework-nodes/revision-nodes/DeletedFrameworkNode/DeletedFrameworkNode";
 import UpdatedFrameworkNode from "@/components/framework-nodes/revision-nodes/UpdatedFrameworkNode/UpdatedFrameworkNode";
 import { Instruction } from "@/types/framework";
+import { ReactNode } from "react";
 import InstructionContentView from "../InstructionContentView/InstructionContentView";
 
 type AddProps = {
@@ -20,7 +21,7 @@ type UpdateProps = {
   after: Instruction;
 };
 
-type RevisionInstructionViewProps = AddProps | DeleteProps | UpdateProps;
+type RevisionInstructionViewProps = (AddProps | DeleteProps | UpdateProps) & { children?: ReactNode };
 
 const RevisionInstructionView = (props: RevisionInstructionViewProps) =>
   props.op === "added" ? (
@@ -32,7 +33,9 @@ const RevisionInstructionView = (props: RevisionInstructionViewProps) =>
           description={props.instruction.description}
         />
       }
-    />
+    >
+      {props.children}
+    </AddedFrameworkNode>
   ) : props.op === "deleted" ? (
     <DeletedFrameworkNode
       content={
@@ -42,7 +45,9 @@ const RevisionInstructionView = (props: RevisionInstructionViewProps) =>
           description={props.instruction.description}
         />
       }
-    />
+    >
+      {props.children}
+    </DeletedFrameworkNode>
   ) : props.op === "updated" ? (
     <UpdatedFrameworkNode
       before={
@@ -59,7 +64,9 @@ const RevisionInstructionView = (props: RevisionInstructionViewProps) =>
           description={props.after.description}
         />
       }
-    />
+    >
+      {props.children}
+    </UpdatedFrameworkNode>
   ) : null;
 
 export default RevisionInstructionView;
