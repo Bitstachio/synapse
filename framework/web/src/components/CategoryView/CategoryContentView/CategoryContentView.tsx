@@ -1,8 +1,6 @@
-type CategoryContentViewProps = {
-  id: string;
-  name: string;
-  description: string;
-};
+import { Category } from "@/types/framework";
+
+type CategoryContentViewProps = Pick<Category, "id" | "name" | "description">;
 
 const CategoryContentView = ({ id, name, description }: CategoryContentViewProps) => (
   <article>
