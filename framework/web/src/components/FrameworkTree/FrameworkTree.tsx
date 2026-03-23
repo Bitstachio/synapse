@@ -12,10 +12,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import CategoryEdit from "../CategoryEdit/CategoryEdit";
 import CategoryView from "../CategoryView/CategoryView";
-import InstructionEdit from "../InstructionEdit/InstructionEdit";
-import EditableInstructionView from "../InstructionView/EditableInstructionView";
 import SubcategoryEdit from "../SubcategoryEdit/SubcategoryEdit";
-import SubcategoryView from "../subcategory-views/SubcategoryView";
+import EditableSubcategoryView from "../subcategory-views/EditableSubcategoryView/EditableSubcategoryView";
 import { EditingTarget } from "./FrameworkTree.types";
 import { shallowCloneFramework } from "./FrameworkTree.utils";
 import {
@@ -24,7 +22,6 @@ import {
   useActiveFramework,
   useFrameworkById,
 } from "./useActiveFramework";
-import RevisionInstructionView from "../InstructionView/RevisionInstructionView";
 
 type FrameworkTreeProps = {
   /** When set, load and edit this framework by ID instead of the active one. */
@@ -471,59 +468,64 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                                 }
                               />
                             ) : (
-                              <SubcategoryView
+                              <EditableSubcategoryView
                                 subcategory={sub}
-                                isEditable
-                                onEdit={() =>
-                                  setEditing({
-                                    type: "subcategory",
-                                    categoryIndex,
-                                    subcategoryIndex,
-                                  })
-                                }
-                                onAddInstruction={() => addInstruction(categoryIndex, subcategoryIndex)}
-                                renderInstructions={() =>
-                                  sub.instructions.map((inst, instructionIndex) => (
-                                    <li key={inst.id} className="mt-1">
-                                      {isEditingInstruction(categoryIndex, subcategoryIndex, instructionIndex) ? (
-                                        <InstructionEdit
-                                          instruction={inst}
-                                          onSave={(payload) =>
-                                            updateInstruction(
-                                              categoryIndex,
-                                              subcategoryIndex,
-                                              instructionIndex,
-                                              payload,
-                                            )
-                                          }
-                                          onCancel={handleCancel}
-                                          onDelete={() =>
-                                            setPendingDelete({
-                                              type: "instruction",
-                                              categoryIndex,
-                                              subcategoryIndex,
-                                              instructionIndex,
-                                            })
-                                          }
-                                        />
-                                      ) : (
-                                        // <EditableInstructionView
-                                        //   instruction={inst}
-                                        //   onEdit={() =>
-                                        //     setEditing({
-                                        //       type: "instruction",
-                                        //       categoryIndex,
-                                        //       subcategoryIndex,
-                                        //       instructionIndex,
-                                        //     })
-                                        //   }
-                                        // />
-                                        <RevisionInstructionView op={"add"} instruction={inst} />
-                                      )}
-                                    </li>
-                                  ))
-                                }
+                                onEdit={() => setEditing({ type: "subcategory", categoryIndex, subcategoryIndex })}
+                                onAddInstruction={() => {}}
                               />
+                              // <SubcategoryView
+                              //   subcategory={sub}
+                              //   isEditable
+                              //   onEdit={() =>
+                              //     setEditing({
+                              //       type: "subcategory",
+                              //       categoryIndex,
+                              //       subcategoryIndex,
+                              //     })
+                              //   }
+                              //   onAddInstruction={() => addInstruction(categoryIndex, subcategoryIndex)}
+                              //   renderInstructions={() =>
+                              //     sub.instructions.map((inst, instructionIndex) => (
+                              //       <li key={inst.id} className="mt-1">
+                              //         {isEditingInstruction(categoryIndex, subcategoryIndex, instructionIndex) ? (
+                              //           <InstructionEdit
+                              //             instruction={inst}
+                              //             onSave={(payload) =>
+                              //               updateInstruction(
+                              //                 categoryIndex,
+                              //                 subcategoryIndex,
+                              //                 instructionIndex,
+                              //                 payload,
+                              //               )
+                              //             }
+                              //             onCancel={handleCancel}
+                              //             onDelete={() =>
+                              //               setPendingDelete({
+                              //                 type: "instruction",
+                              //                 categoryIndex,
+                              //                 subcategoryIndex,
+                              //                 instructionIndex,
+                              //               })
+                              //             }
+                              //           />
+                              //         ) : (
+                              //           // <EditableInstructionView
+                              //           //   instruction={inst}
+                              //           //   onEdit={() =>
+                              //           //     setEditing({
+                              //           //       type: "instruction",
+                              //           //       categoryIndex,
+                              //           //       subcategoryIndex,
+                              //           //       instructionIndex,
+                              //           //     })
+                              //           //   }
+                              //           // />
+                              //           <RevisionInstructionView op={"add"} instruction={inst} />
+                              //         )}
+                              //       </li>
+                              //     ))
+                              //   }
+                              // />
                             )}
                           </li>
                         ))

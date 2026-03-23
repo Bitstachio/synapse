@@ -2,18 +2,13 @@ import { cn } from "@/lib/tailwind";
 import { ReactNode } from "react";
 
 type BaseInstructionViewProps = {
+  content: ReactNode;
+  labels?: ReactNode;
+  actions?: ReactNode;
   classExtension?: string;
-  renderLabel?: ReactNode;
-  renderActions?: ReactNode;
-  renderContent: ReactNode;
 };
 
-const BaseInstructionView = ({
-  classExtension,
-  renderLabel,
-  renderActions,
-  renderContent,
-}: BaseInstructionViewProps) => {
+const BaseInstructionView = ({ content, labels, actions, classExtension }: BaseInstructionViewProps) => {
   return (
     <div
       className={cn(
@@ -23,13 +18,10 @@ const BaseInstructionView = ({
       )}
     >
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1">
-          <p className="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Instruction</p>
-          {renderLabel}
-        </div>
-        {renderContent}
+        {labels && <div>{labels}</div>}
+        <div>{content}</div>
       </div>
-      {renderActions}
+      {actions && <div className="flex gap-2">{actions}</div>}
     </div>
   );
 };

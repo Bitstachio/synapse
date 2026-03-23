@@ -1,8 +1,8 @@
 import { Instruction } from "@/types/framework";
 import ChangeCard from "../../ChangeCard/ChangeCard";
+import RevisionOpBadge from "../../RevisionOpBadge/RevisionOpBadge";
 import BaseInstructionView from "../BaseInstructionView/BaseInstructionView";
 import InstructionContentView from "../InstructionContentView/InstructionContentView";
-import RevisionOpBadge from "../../RevisionOpBadge/RevisionOpBadge";
 
 type AddProps = {
   op: "add";
@@ -25,12 +25,12 @@ type RevisionInstructionViewProps = AddProps | DeleteProps | UpdateProps;
 const RevisionInstructionView = (props: RevisionInstructionViewProps) => {
   return (
     <BaseInstructionView
-      renderLabel={<RevisionOpBadge op={props.op} />}
-      renderContent={
+      labels={<RevisionOpBadge op={props.op} />}
+      content={
         props.op === "add" || props.op === "delete" ? (
           <InstructionContentView
             id={props.instruction.id}
-            riskLevel={props.instruction.risk_level}
+            risk_level={props.instruction.risk_level}
             description={props.instruction.description}
           />
         ) : props.op === "update" ? (
@@ -38,14 +38,14 @@ const RevisionInstructionView = (props: RevisionInstructionViewProps) => {
             before={
               <InstructionContentView
                 id={props.before.id}
-                riskLevel={props.before.risk_level}
+                risk_level={props.before.risk_level}
                 description={props.before.description}
               />
             }
             after={
               <InstructionContentView
                 id={props.after.id}
-                riskLevel={props.after.risk_level}
+                risk_level={props.after.risk_level}
                 description={props.after.description}
               />
             }
