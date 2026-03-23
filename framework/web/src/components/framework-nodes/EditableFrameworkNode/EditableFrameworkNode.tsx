@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import FrameworkNode from "../BaseFrameworkNode/BaseFrameworkNode";
+import BaseFrameworkNode from "../BaseFrameworkNode/BaseFrameworkNode";
 import FrameworkNodeActionButton from "../FrameworkNodeActionButton/FrameworkNodeActionButton";
 
 type EditableFrameworkNodeProps = {
@@ -10,7 +10,7 @@ type EditableFrameworkNodeProps = {
 };
 
 const EditableFrameworkNode = ({ content, onEditContent, onAddSubnode, children }: EditableFrameworkNodeProps) => (
-  <FrameworkNode
+  <BaseFrameworkNode
     content={content}
     actions={
       <>
@@ -26,7 +26,7 @@ const EditableFrameworkNode = ({ content, onEditContent, onAddSubnode, children 
     }
   >
     {children}
-  </FrameworkNode>
+  </BaseFrameworkNode>
 );
 
 export default EditableFrameworkNode;
