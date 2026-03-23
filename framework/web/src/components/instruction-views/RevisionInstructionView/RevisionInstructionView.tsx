@@ -1,4 +1,6 @@
-import RevisionFrameworkNode from "@/components/framework-nodes/RevisionFrameworkNode/RevisionFrameworkNode";
+import AddedFrameworkNode from "@/components/framework-nodes/revision-nodes/AddedFrameworkNode/AddedFrameworkNode";
+import DeletedFrameworkNode from "@/components/framework-nodes/revision-nodes/DeletedFrameworkNode/DeletedFrameworkNode";
+import UpdatedFrameworkNode from "@/components/framework-nodes/revision-nodes/UpdatedFrameworkNode/UpdatedFrameworkNode";
 import { Instruction } from "@/types/framework";
 import InstructionContentView from "../InstructionContentView/InstructionContentView";
 
@@ -21,9 +23,18 @@ type UpdateProps = {
 type RevisionInstructionViewProps = AddProps | DeleteProps | UpdateProps;
 
 const RevisionInstructionView = (props: RevisionInstructionViewProps) =>
-  props.op === "added" || props.op === "deleted" ? (
-    <RevisionFrameworkNode
-      op={props.op}
+  props.op === "added" ? (
+    <AddedFrameworkNode
+      content={
+        <InstructionContentView
+          id={props.instruction.id}
+          risk_level={props.instruction.risk_level}
+          description={props.instruction.description}
+        />
+      }
+    />
+  ) : props.op === "deleted" ? (
+    <DeletedFrameworkNode
       content={
         <InstructionContentView
           id={props.instruction.id}
@@ -33,8 +44,7 @@ const RevisionInstructionView = (props: RevisionInstructionViewProps) =>
       }
     />
   ) : props.op === "updated" ? (
-    <RevisionFrameworkNode
-      op={props.op}
+    <UpdatedFrameworkNode
       before={
         <InstructionContentView
           id={props.before.id}

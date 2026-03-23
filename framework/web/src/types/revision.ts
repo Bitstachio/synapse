@@ -1,1 +1,1 @@
-export type RevisionOp = "add" | "update" | "delete";
+export type RevisionOp = "added" | "updated" | "deleted";
