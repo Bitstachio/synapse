@@ -10,9 +10,6 @@ import {
   normalizeContentToNewShape,
 } from "./revision-enrichment";
 
-/** Seconds within which to treat repeated "updated" by same user/framework as one revision (0 = no dedupe). */
-const UPDATE_DEDUPE_WINDOW_SECONDS = 15;
-
 export interface RevisionRecordInput {
   action: FrameworkRevisionAction;
   frameworkId: string;
@@ -41,25 +38,8 @@ export class FrameworkRevisionsService {
     private frameworkModel: Model<Framework>,
   ) {}
 
-  async record(input: RevisionRecordInput): Promise<FrameworkRevision | null> {
+  async record(input: RevisionRecordInput): Promise<FrameworkRevision> {
     const performedAt = new Date();
-
-    if (input.action === "updated" && UPDATE_DEDUPE_WINDOW_SECONDS > 0) {
-      const since = new Date(performedAt.getTime() - UPDATE_DEDUPE_WINDOW_SECONDS * 1000);
-      const recent = await this.revisionModel
-        .findOne({
-          frameworkId: input.frameworkId,
-          userId: input.userId,
-          action: "updated",
-          performedAt: { $gte: since },
-        })
-        .sort({ performedAt: -1 })
-        .lean()
-        .exec();
-      if (recent) {
-        return null;
-      }
-    }
 
     const { previousContent, newContent, ...rest } = input;
     const payload: Record<string, unknown> = { ...rest, performedAt };
