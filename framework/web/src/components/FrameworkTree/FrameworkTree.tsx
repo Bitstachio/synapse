@@ -132,9 +132,8 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
     };
     next.content.categories.push(newCategory);
     setFramework(next);
-    saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
     setEditing({ type: "category", categoryIndex: next.content.categories.length - 1, isNew: true });
-  }, [framework, frameworkId]);
+  }, [framework]);
 
   const addSubcategory = useCallback(
     (categoryIndex: number) => {
@@ -152,7 +151,6 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
       };
       cat.subcategories.push(newSubcategory);
       setFramework(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing({
         type: "subcategory",
         categoryIndex,
@@ -208,7 +206,6 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
       };
       sub.instructions.push(newInstruction);
       setFramework(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing({
         type: "instruction",
         categoryIndex,
@@ -291,12 +288,10 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
         const next = shallowCloneFramework(framework);
         next.content.categories.splice(editing.categoryIndex, 1);
         setFramework(next);
-        saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       } else if (editing.type === "subcategory") {
         const next = shallowCloneFramework(framework);
         next.content.categories[editing.categoryIndex].subcategories.splice(editing.subcategoryIndex, 1);
         setFramework(next);
-        saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       } else {
         const next = shallowCloneFramework(framework);
         next.content.categories[editing.categoryIndex].subcategories[editing.subcategoryIndex].instructions.splice(
@@ -304,7 +299,6 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
           1,
         );
         setFramework(next);
-        saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       }
     }
     setEditing(null);
