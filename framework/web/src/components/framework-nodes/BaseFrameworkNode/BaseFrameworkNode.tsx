@@ -27,7 +27,9 @@ const BaseFrameworkNode = ({ content, labels, actions, children, variant = "regu
       </div>
       {actions && <div className="flex gap-2">{actions}</div>}
     </div>
-    {children && <ul className="mt-2 ml-3 border-l-2 border-zinc-200 pl-3 dark:border-zinc-600">{children}</ul>}
+    {children && (
+      <ul className="mt-2 ml-3 space-y-1.5 border-l-2 border-zinc-200 pl-3 dark:border-zinc-600">{children}</ul>
+    )}
   </li>
 );
 
