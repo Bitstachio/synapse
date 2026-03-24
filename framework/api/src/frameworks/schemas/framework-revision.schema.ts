@@ -3,7 +3,7 @@ import { Document, Schema as MongooseSchema, Types } from "mongoose";
 
 export type FrameworkRevisionAction = "created" | "updated" | "deleted" | "activated";
 
-/** JSON Patch operation (RFC 6902): { op, path, value? } etc. */
+/** Semantic diff operation: { op, path, value } for add/remove; { op, path, value, previousValue } for replace. */
 export type JsonPatchOperation = Record<string, unknown>;
 
 @Schema({ timestamps: false })
@@ -34,7 +34,7 @@ export class FrameworkRevision extends Document {
   @Prop({ type: MongooseSchema.Types.Mixed })
   newContent?: Record<string, unknown>;
 
-  /** JSON Patch (RFC 6902) from previousContent to newContent (for updated). */
+  /** Semantic diff from previousContent to newContent (for updated). Items matched by id, not array index. */
   @Prop({ type: [MongooseSchema.Types.Mixed] })
   diff?: JsonPatchOperation[];
 }

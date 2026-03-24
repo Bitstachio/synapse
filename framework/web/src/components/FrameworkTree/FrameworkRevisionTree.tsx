@@ -8,7 +8,7 @@ import SubcategoryContentView from "@/components/subcategory-views/SubcategoryCo
 import type { RevisionDetail, RevisionDiffOp } from "@/lib/frameworks-api";
 import type { Category, Instruction, Subcategory } from "@/types/framework";
 
-/** Path up to and including the item (e.g. /categories/0/subcategories/0/instructions/3) */
+/** Path up to and including the item (supports both index and id segments, e.g. /categories/F2/...) */
 function getItemPath(path: string): string {
   const segments = path.split("/").filter(Boolean);
   const instIdx = segments.indexOf("instructions");
@@ -51,6 +51,27 @@ function instructionRevisionState(
   return null;
 }
 
+function alignById<T extends { id: string }>(
+  prevItems: T[],
+  nextItems: T[],
+): ({ kind: "pair"; prev: T; next: T } | { kind: "deleted"; prev: T } | { kind: "added"; next: T })[] {
+  const nextById = new Map(nextItems.map((item) => [item.id, item]));
+  const prevIdSet = new Set(prevItems.map((i) => i.id));
+  const rows: ({ kind: "pair"; prev: T; next: T } | { kind: "deleted"; prev: T } | { kind: "added"; next: T })[] = [];
+
+  for (const prev of prevItems) {
+    const n = nextById.get(prev.id);
+    if (n) rows.push({ kind: "pair", prev, next: n });
+    else rows.push({ kind: "deleted", prev });
+  }
+
+  for (const n of nextItems) {
+    if (!prevIdSet.has(n.id)) rows.push({ kind: "added", next: n });
+  }
+
+  return rows;
+}
+
 type FrameworkRevisionTreeProps = {
   revision: RevisionDetail;
   displayableOps: RevisionDiffOp[];
@@ -63,53 +84,50 @@ export function FrameworkRevisionTree({ revision, displayableOps }: FrameworkRev
 
   const prevCats = prev?.categories ?? [];
   const nextCats = next?.categories ?? [];
-  const numCategories = Math.max(prevCats.length, nextCats.length);
+  const categoryRows = alignById(prevCats, nextCats);
 
-  if (numCategories === 0) {
+  if (categoryRows.length === 0) {
     return <p className="text-sm text-zinc-500 dark:text-zinc-400">No framework content to show in context.</p>;
   }
 
   const renderInstructions = (
-    ci: number,
-    si: number,
+    categoryId: string,
+    subcategoryId: string,
     prevSub: Subcategory | undefined,
     nextSub: Subcategory | undefined,
   ) => {
     const prevInsts = prevSub?.instructions ?? [];
     const nextInsts = nextSub?.instructions ?? [];
-    const maxLen = Math.max(prevInsts.length, nextInsts.length);
-    if (maxLen === 0) return null;
+    const rows = alignById(prevInsts, nextInsts);
+    if (rows.length === 0) return null;
 
-    return Array.from({ length: maxLen }, (_, ii) => {
-      const prevInst = prevInsts[ii];
-      const nextInst = nextInsts[ii];
-      const instPath = `/categories/${ci}/subcategories/${si}/instructions/${ii}`;
+    return rows.map((row) => {
+      const instructionId = row.kind === "added" ? row.next.id : row.kind === "deleted" ? row.prev.id : row.prev.id;
+      const instPath = `/categories/${categoryId}/subcategories/${subcategoryId}/instructions/${instructionId}`;
       const instOps = opsByItemPath.get(instPath) ?? [];
+
+      if (row.kind === "added") {
+        return <RevisionInstructionView key={row.next.id} op="added" instruction={row.next} />;
+      }
+      if (row.kind === "deleted") {
+        return <RevisionInstructionView key={row.prev.id} op="deleted" instruction={row.prev} />;
+      }
+
+      const { prev: prevInst, next: nextInst } = row;
       const rev = instructionRevisionState(instOps, prevInst, nextInst);
-      const instruction = nextInst ?? prevInst;
 
-      if (rev === "added" && nextInst) {
-        return <RevisionInstructionView key={nextInst.id ?? instPath} op="added" instruction={nextInst} />;
-      }
-      if (rev === "deleted" && prevInst) {
-        return <RevisionInstructionView key={prevInst.id ?? instPath} op="deleted" instruction={prevInst} />;
-      }
       if (rev === "updated" && prevInst && nextInst) {
-        return (
-          <RevisionInstructionView key={nextInst.id ?? instPath} op="updated" before={prevInst} after={nextInst} />
-        );
+        return <RevisionInstructionView key={nextInst.id} op="updated" before={prevInst} after={nextInst} />;
       }
-
-      if (!instruction) return null;
 
       return (
         <BaseFrameworkNode
-          key={instruction.id ?? instPath}
+          key={nextInst.id}
           content={
             <InstructionContentView
-              id={instruction.id}
-              risk_level={instruction.risk_level}
-              description={instruction.description}
+              id={nextInst.id}
+              risk_level={nextInst.risk_level}
+              description={nextInst.description}
             />
           }
         />
@@ -117,50 +135,46 @@ export function FrameworkRevisionTree({ revision, displayableOps }: FrameworkRev
     });
   };
 
-  const renderSubcategories = (ci: number, prevCat: Category | undefined, nextCat: Category | undefined) => {
+  const renderSubcategories = (categoryId: string, prevCat: Category | undefined, nextCat: Category | undefined) => {
     const prevSubs = prevCat?.subcategories ?? [];
     const nextSubs = nextCat?.subcategories ?? [];
-    const maxLen = Math.max(prevSubs.length, nextSubs.length);
-    if (maxLen === 0) return null;
+    const rows = alignById(prevSubs, nextSubs);
+    if (rows.length === 0) return null;
 
-    return Array.from({ length: maxLen }, (_, si) => {
-      const prevSub = prevSubs[si];
-      const nextSub = nextSubs[si];
-      const sub = nextSub ?? prevSub;
-      if (!sub) return null;
-
-      const subPath = `/categories/${ci}/subcategories/${si}`;
+    return rows.map((row) => {
+      const subId = row.kind === "added" ? row.next.id : row.kind === "deleted" ? row.prev.id : row.prev.id;
+      const subPath = `/categories/${categoryId}/subcategories/${subId}`;
       const subOps = opsByItemPath.get(subPath) ?? [];
-      const isSubAdded = !prevSub && !!nextSub;
-      const isSubDeleted = !!prevSub && !nextSub;
 
-      if (isSubAdded && nextSub) {
+      if (row.kind === "added") {
         return (
-          <RevisionSubcategoryView key={nextSub.id ?? subPath} op="added" subcategory={nextSub}>
-            {renderInstructions(ci, si, undefined, nextSub)}
+          <RevisionSubcategoryView key={row.next.id} op="added" subcategory={row.next}>
+            {renderInstructions(categoryId, row.next.id, undefined, row.next)}
           </RevisionSubcategoryView>
         );
       }
 
-      if (isSubDeleted && prevSub) {
+      if (row.kind === "deleted") {
         return (
-          <RevisionSubcategoryView key={prevSub.id ?? subPath} op="deleted" subcategory={prevSub}>
-            {renderInstructions(ci, si, prevSub, undefined)}
+          <RevisionSubcategoryView key={row.prev.id} op="deleted" subcategory={row.prev}>
+            {renderInstructions(categoryId, row.prev.id, row.prev, undefined)}
           </RevisionSubcategoryView>
         );
       }
 
-      if (subOps.length > 0 && prevSub && nextSub) {
+      const { prev: prevSub, next: nextSub } = row;
+
+      if (subOps.length > 0) {
         return (
-          <RevisionSubcategoryView key={nextSub.id ?? subPath} op="updated" before={prevSub} after={nextSub}>
-            {renderInstructions(ci, si, prevSub, nextSub)}
+          <RevisionSubcategoryView key={nextSub.id} op="updated" before={prevSub} after={nextSub}>
+            {renderInstructions(categoryId, nextSub.id, prevSub, nextSub)}
           </RevisionSubcategoryView>
         );
       }
 
       return (
-        <BaseFrameworkNode key={sub.id ?? subPath} content={<SubcategoryContentView id={sub.id} name={sub.name} />}>
-          {renderInstructions(ci, si, prevSub, nextSub)}
+        <BaseFrameworkNode key={nextSub.id} content={<SubcategoryContentView id={nextSub.id} name={nextSub.name} />}>
+          {renderInstructions(categoryId, nextSub.id, prevSub, nextSub)}
         </BaseFrameworkNode>
       );
     });
@@ -170,47 +184,43 @@ export function FrameworkRevisionTree({ revision, displayableOps }: FrameworkRev
     <div className="space-y-2">
       <h3 className="text-sm font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Categories</h3>
       <ul className="space-y-3">
-        {Array.from({ length: numCategories }, (_, ci) => {
-          const prevCat = prevCats[ci];
-          const nextCat = nextCats[ci];
-          const cat = nextCat ?? prevCat;
-          if (!cat) return null;
-
-          const categoryPath = `/categories/${ci}`;
+        {categoryRows.map((row) => {
+          const categoryId = row.kind === "added" ? row.next.id : row.kind === "deleted" ? row.prev.id : row.prev.id;
+          const categoryPath = `/categories/${categoryId}`;
           const categoryOps = opsByItemPath.get(categoryPath) ?? [];
-          const isCategoryAdded = !prevCat && !!nextCat;
-          const isCategoryDeleted = !!prevCat && !nextCat;
 
-          if (isCategoryAdded && nextCat) {
+          if (row.kind === "added") {
             return (
-              <RevisionCategoryView key={nextCat.id ?? categoryPath} op="added" category={nextCat}>
-                {renderSubcategories(ci, undefined, nextCat)}
+              <RevisionCategoryView key={row.next.id} op="added" category={row.next}>
+                {renderSubcategories(categoryId, undefined, row.next)}
               </RevisionCategoryView>
             );
           }
 
-          if (isCategoryDeleted && prevCat) {
+          if (row.kind === "deleted") {
             return (
-              <RevisionCategoryView key={prevCat.id ?? categoryPath} op="deleted" category={prevCat}>
-                {renderSubcategories(ci, prevCat, undefined)}
+              <RevisionCategoryView key={row.prev.id} op="deleted" category={row.prev}>
+                {renderSubcategories(categoryId, row.prev, undefined)}
               </RevisionCategoryView>
             );
           }
 
-          if (categoryOps.length > 0 && prevCat && nextCat) {
+          const { prev: prevCat, next: nextCat } = row;
+
+          if (categoryOps.length > 0) {
             return (
-              <RevisionCategoryView key={nextCat.id ?? categoryPath} op="updated" before={prevCat} after={nextCat}>
-                {renderSubcategories(ci, prevCat, nextCat)}
+              <RevisionCategoryView key={nextCat.id} op="updated" before={prevCat} after={nextCat}>
+                {renderSubcategories(categoryId, prevCat, nextCat)}
               </RevisionCategoryView>
             );
           }
 
           return (
             <BaseFrameworkNode
-              key={cat.id ?? categoryPath}
-              content={<CategoryContentView id={cat.id} name={cat.name} description={cat.description} />}
+              key={nextCat.id}
+              content={<CategoryContentView id={nextCat.id} name={nextCat.name} description={nextCat.description} />}
             >
-              {renderSubcategories(ci, prevCat, nextCat)}
+              {renderSubcategories(categoryId, prevCat, nextCat)}
             </BaseFrameworkNode>
           );
         })}

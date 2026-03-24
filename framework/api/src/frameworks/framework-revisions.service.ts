@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { compare as jsonPatchCompare } from "fast-json-patch";
 import { Model } from "mongoose";
 import { Framework } from "./schemas/framework.schema";
 import { FrameworkRevision, FrameworkRevisionAction } from "./schemas/framework-revision.schema";
 import {
+  computeSemanticDiff,
   enrichDiffValuesWithCurrent,
   enrichNewContentWithCurrent,
   normalizeContentToNewShape,
@@ -47,15 +47,10 @@ export class FrameworkRevisionsService {
     if (previousContent !== undefined) payload.previousContent = previousContent;
     if (newContent !== undefined) payload.newContent = newContent;
 
-    if (
-      previousContent !== undefined &&
-      newContent !== undefined &&
-      typeof previousContent === "object" &&
-      typeof newContent === "object"
-    ) {
+    if (previousContent !== undefined && newContent !== undefined) {
       try {
-        const patch = jsonPatchCompare(previousContent as object, newContent as object, true);
-        if (patch.length > 0) payload.diff = patch;
+        const diff = computeSemanticDiff(previousContent, newContent);
+        if (diff) payload.diff = diff;
       } catch {
         // If diff computation fails, still store previous/new content
       }

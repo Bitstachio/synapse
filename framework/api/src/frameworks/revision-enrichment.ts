@@ -7,6 +7,104 @@
 type ContentTree = Record<string, unknown>;
 type JsonPatchOp = { op: string; path: string; value?: unknown };
 
+export type SemanticDiffOp =
+  | { op: "add"; path: string; value: Record<string, unknown> }
+  | { op: "remove"; path: string; value: Record<string, unknown> }
+  | { op: "replace"; path: string; value: unknown; previousValue: unknown };
+
+const DIFFABLE_SCALARS = ["name", "description", "risk_level"] as const;
+
+function diffScalars(
+  prev: Record<string, unknown>,
+  next: Record<string, unknown>,
+  basePath: string,
+): SemanticDiffOp[] {
+  const ops: SemanticDiffOp[] = [];
+  for (const key of DIFFABLE_SCALARS) {
+    const prevVal = prev[key];
+    const nextVal = next[key];
+    if ((key in prev || key in next) && prevVal !== nextVal) {
+      ops.push({ op: "replace", path: `${basePath}/${key}`, previousValue: prevVal, value: nextVal });
+    }
+  }
+  return ops;
+}
+
+function diffByIds(
+  prevItems: Record<string, unknown>[],
+  nextItems: Record<string, unknown>[],
+  basePath: string,
+  onModified: (prev: Record<string, unknown>, next: Record<string, unknown>, path: string) => SemanticDiffOp[],
+): SemanticDiffOp[] {
+  const ops: SemanticDiffOp[] = [];
+  const prevById = new Map(
+    prevItems.filter((i) => typeof i.id === "string").map((i) => [i.id as string, i]),
+  );
+  const nextById = new Map(
+    nextItems.filter((i) => typeof i.id === "string").map((i) => [i.id as string, i]),
+  );
+
+  for (const [id, item] of prevById) {
+    if (!nextById.has(id)) ops.push({ op: "remove", path: `${basePath}/${id}`, value: item });
+  }
+  for (const [id, item] of nextById) {
+    if (!prevById.has(id)) ops.push({ op: "add", path: `${basePath}/${id}`, value: item });
+  }
+  for (const [id, prevItem] of prevById) {
+    const nextItem = nextById.get(id);
+    if (nextItem) ops.push(...onModified(prevItem, nextItem, `${basePath}/${id}`));
+  }
+  return ops;
+}
+
+/**
+ * Compute a semantic, identity-based diff between two framework content trees.
+ * Items are matched by their stable `id` field rather than array position, so
+ * deleting a middle element produces a single `remove` op instead of a chain of
+ * index-shifting `replace` ops.
+ */
+export function computeSemanticDiff(
+  previous: Record<string, unknown>,
+  next: Record<string, unknown>,
+): SemanticDiffOp[] | null {
+  const prevCats = Array.isArray(previous.categories)
+    ? (previous.categories as Record<string, unknown>[])
+    : [];
+  const nextCats = Array.isArray(next.categories)
+    ? (next.categories as Record<string, unknown>[])
+    : [];
+
+  const ops = diffByIds(prevCats, nextCats, "/categories", (prevCat, nextCat, catPath) => {
+    const catOps = diffScalars(prevCat, nextCat, catPath);
+    const prevSubs = Array.isArray(prevCat.subcategories)
+      ? (prevCat.subcategories as Record<string, unknown>[])
+      : [];
+    const nextSubs = Array.isArray(nextCat.subcategories)
+      ? (nextCat.subcategories as Record<string, unknown>[])
+      : [];
+    catOps.push(
+      ...diffByIds(prevSubs, nextSubs, `${catPath}/subcategories`, (prevSub, nextSub, subPath) => {
+        const subOps = diffScalars(prevSub, nextSub, subPath);
+        const prevInstrs = Array.isArray(prevSub.instructions)
+          ? (prevSub.instructions as Record<string, unknown>[])
+          : [];
+        const nextInstrs = Array.isArray(nextSub.instructions)
+          ? (nextSub.instructions as Record<string, unknown>[])
+          : [];
+        subOps.push(
+          ...diffByIds(prevInstrs, nextInstrs, `${subPath}/instructions`, (prevInstr, nextInstr, instrPath) =>
+            diffScalars(prevInstr, nextInstr, instrPath),
+          ),
+        );
+        return subOps;
+      }),
+    );
+    return catOps;
+  });
+
+  return ops.length > 0 ? ops : null;
+}
+
 function isObject(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
