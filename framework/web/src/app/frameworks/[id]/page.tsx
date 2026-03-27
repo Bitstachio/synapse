@@ -10,8 +10,14 @@ import {
 import { activateFramework, deleteFramework } from "@/lib/frameworks-api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+
+function FrameworkTreeWithFocus({ frameworkId }: { frameworkId: string }) {
+  const searchParams = useSearchParams();
+  const focus = searchParams.get("focus");
+  return <FrameworkTree frameworkId={frameworkId} focusItemId={focus} />;
+}
 
 export default function FrameworkEditPage() {
   const params = useParams();
@@ -132,7 +138,15 @@ export default function FrameworkEditPage() {
           </div>
         </div>
         <div className="mt-8">
-          <FrameworkTree frameworkId={id} />
+          <Suspense
+            fallback={
+              <div className="flex justify-center py-12">
+                <p className="text-zinc-500">Loading framework…</p>
+              </div>
+            }
+          >
+            <FrameworkTreeWithFocus frameworkId={id} />
+          </Suspense>
         </div>
       </main>
       <ReturnToTop />

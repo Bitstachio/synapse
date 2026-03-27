@@ -7,10 +7,21 @@ type EditableFrameworkNodeProps = {
   onEditContent: () => void;
   onAddSubnode?: () => void;
   children?: ReactNode;
+  domId?: string;
+  highlighted?: boolean;
 };
 
-const EditableFrameworkNode = ({ content, onEditContent, onAddSubnode, children }: EditableFrameworkNodeProps) => (
+const EditableFrameworkNode = ({
+  content,
+  onEditContent,
+  onAddSubnode,
+  children,
+  domId,
+  highlighted,
+}: EditableFrameworkNodeProps) => (
   <BaseFrameworkNode
+    domId={domId}
+    highlighted={highlighted}
     content={content}
     actions={
       <>

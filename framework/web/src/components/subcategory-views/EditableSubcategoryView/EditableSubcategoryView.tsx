@@ -8,10 +8,21 @@ type EditableSubcategoryViewProps = {
   onEdit: () => void;
   onAddInstruction: () => void;
   children?: ReactNode;
+  domId: string;
+  highlighted?: boolean;
 };
 
-const EditableSubcategoryView = ({ subcategory, onEdit, onAddInstruction, children }: EditableSubcategoryViewProps) => (
+const EditableSubcategoryView = ({
+  subcategory,
+  onEdit,
+  onAddInstruction,
+  children,
+  domId,
+  highlighted,
+}: EditableSubcategoryViewProps) => (
   <EditableFrameworkNode
+    domId={domId}
+    highlighted={highlighted}
     content={<SubcategoryContentView id={subcategory.id} name={subcategory.name} />}
     onEditContent={onEdit}
     onAddSubnode={onAddInstruction}

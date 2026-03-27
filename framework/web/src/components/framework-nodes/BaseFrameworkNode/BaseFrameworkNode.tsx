@@ -10,16 +10,37 @@ const VARIANT_CONTAINER_CLASS = {
   updated: "border-yellow-200 bg-yellow-50/60 dark:border-yellow-800/60 dark:bg-yellow-950/30",
 } satisfies Record<FrameworkNodeVariant, string>;
 
+/** Shared with category/subcategory/instruction edit wrappers in FrameworkTree. */
+export const FRAMEWORK_FOCUS_HIGHLIGHT_CLASS =
+  "ring-2 ring-amber-400/90 bg-amber-50/95 shadow-sm dark:border-amber-700/50 dark:bg-amber-950/40 dark:ring-amber-500/70";
+
 type FrameworkNodeProps = {
   content: ReactNode;
   labels?: ReactNode;
   actions?: ReactNode;
   children?: ReactNode;
   variant?: FrameworkNodeVariant;
+  domId?: string;
+  highlighted?: boolean;
 };
 
-const BaseFrameworkNode = ({ content, labels, actions, children, variant = "regular" }: FrameworkNodeProps) => (
-  <li className={cn("rounded border p-3", VARIANT_CONTAINER_CLASS[variant])}>
+const BaseFrameworkNode = ({
+  content,
+  labels,
+  actions,
+  children,
+  variant = "regular",
+  domId,
+  highlighted,
+}: FrameworkNodeProps) => (
+  <li
+    id={domId}
+    className={cn(
+      "rounded border p-3",
+      VARIANT_CONTAINER_CLASS[variant],
+      highlighted && FRAMEWORK_FOCUS_HIGHLIGHT_CLASS,
+    )}
+  >
     <div className="flex flex-wrap items-start justify-between gap-2">
       <div className="flex flex-1 flex-col gap-1">
         {labels && <div>{labels}</div>}

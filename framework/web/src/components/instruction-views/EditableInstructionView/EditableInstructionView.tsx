@@ -5,10 +5,14 @@ import InstructionContentView from "../InstructionContentView/InstructionContent
 type EditableInstructionViewProps = {
   instruction: Instruction;
   onEdit: () => void;
+  domId: string;
+  highlighted?: boolean;
 };
 
-const EditableInstructionView = ({ instruction, onEdit }: EditableInstructionViewProps) => (
+const EditableInstructionView = ({ instruction, onEdit, domId, highlighted }: EditableInstructionViewProps) => (
   <EditableFrameworkNode
+    domId={domId}
+    highlighted={highlighted}
     content={
       <InstructionContentView
         id={instruction.id}

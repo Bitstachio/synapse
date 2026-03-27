@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
+import { findFrameworkFocusElement, frameworkItemElementId } from "@/lib/framework-item-dom";
+import { cn } from "@/lib/tailwind";
 import {
   createFrameworkVersion,
   FrameworkConflictError,
@@ -10,6 +12,7 @@ import {
 import type { Category, Framework, Instruction, Subcategory } from "@/types/framework";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
+import { FRAMEWORK_FOCUS_HIGHLIGHT_CLASS } from "../framework-nodes/BaseFrameworkNode/BaseFrameworkNode";
 import CategoryEdit from "../CategoryEdit/CategoryEdit";
 import EditableCategoryView from "../CategoryView/EditableCategoryView/EditableCategoryView";
 import InstructionEdit from "../InstructionEdit/InstructionEdit";
@@ -28,9 +31,11 @@ import {
 type FrameworkTreeProps = {
   /** When set, load and edit this framework by ID instead of the active one. */
   frameworkId?: string | null;
+  /** Category, subcategory, or instruction id to scroll to and highlight (`?focus=` on the edit page). */
+  focusItemId?: string | null;
 };
 
-export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreeProps = {}) => {
+export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: FrameworkTreeProps = {}) => {
   const { isAuthenticated } = useAuth();
   const editById = frameworkIdProp ?? null;
   const activeQuery = useActiveFramework({ enabled: isAuthenticated && !editById });
@@ -49,6 +54,24 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
       setFrameworkId(data.id);
     }
   }, [data]);
+
+  const normalizedFocusId = focusItemId?.trim() || null;
+  const isFocusTarget = useCallback(
+    (itemId: string) => normalizedFocusId !== null && itemId === normalizedFocusId,
+    [normalizedFocusId],
+  );
+
+  useEffect(() => {
+    if (!normalizedFocusId || !framework) return;
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = findFrameworkFocusElement(normalizedFocusId);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [framework, normalizedFocusId]);
 
   const toPayload = (fw: Framework): FrameworkWritePayload => ({
     name: fw.name,
@@ -433,7 +456,11 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                 isEditingCategory(categoryIndex) ? (
                   <li
                     key={cat.id}
-                    className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/30"
+                    id={frameworkItemElementId("category", cat.id)}
+                    className={cn(
+                      "rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900/30",
+                      isFocusTarget(cat.id) && FRAMEWORK_FOCUS_HIGHLIGHT_CLASS,
+                    )}
                   >
                     <CategoryEdit
                       category={cat}
@@ -446,13 +473,22 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                   <EditableCategoryView
                     key={cat.id}
                     category={cat}
+                    domId={frameworkItemElementId("category", cat.id)}
+                    highlighted={isFocusTarget(cat.id)}
                     onEdit={() => setEditing({ type: "category", categoryIndex })}
                     onAddSubcategory={() => addSubcategory(categoryIndex)}
                   >
                     {cat.subcategories.length > 0
                       ? cat.subcategories.map((sub, subcategoryIndex) =>
                           isEditingSubcategory(categoryIndex, subcategoryIndex) ? (
-                            <li key={sub.id}>
+                            <li
+                              key={sub.id}
+                              id={frameworkItemElementId("subcategory", sub.id)}
+                              className={cn(
+                                "rounded",
+                                isFocusTarget(sub.id) && FRAMEWORK_FOCUS_HIGHLIGHT_CLASS,
+                              )}
+                            >
                               <SubcategoryEdit
                                 subcategory={sub}
                                 onSave={(payload) => updateSubcategory(categoryIndex, subcategoryIndex, payload)}
@@ -470,6 +506,8 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                             <EditableSubcategoryView
                               key={sub.id}
                               subcategory={sub}
+                              domId={frameworkItemElementId("subcategory", sub.id)}
+                              highlighted={isFocusTarget(sub.id)}
                               onEdit={() =>
                                 setEditing({
                                   type: "subcategory",
@@ -482,7 +520,14 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                               {sub.instructions.length > 0
                                 ? sub.instructions.map((inst, instructionIndex) =>
                                     isEditingInstruction(categoryIndex, subcategoryIndex, instructionIndex) ? (
-                                      <li key={inst.id}>
+                                      <li
+                                        key={inst.id}
+                                        id={frameworkItemElementId("instruction", inst.id)}
+                                        className={cn(
+                                          "rounded",
+                                          isFocusTarget(inst.id) && FRAMEWORK_FOCUS_HIGHLIGHT_CLASS,
+                                        )}
+                                      >
                                         <InstructionEdit
                                           instruction={inst}
                                           onSave={(payload) =>
@@ -508,6 +553,8 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp }: FrameworkTreePro
                                       <EditableInstructionView
                                         key={inst.id}
                                         instruction={inst}
+                                        domId={frameworkItemElementId("instruction", inst.id)}
+                                        highlighted={isFocusTarget(inst.id)}
                                         onEdit={() =>
                                           setEditing({
                                             type: "instruction",
