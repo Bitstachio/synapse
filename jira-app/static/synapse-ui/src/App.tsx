@@ -1,18 +1,48 @@
 import { invoke } from "@forge/bridge";
 import { useState } from "react";
 
-type SynapseData = {
+/** Matches brain POST /analyze-story `data` shape (nested verdict). */
+type UserStoryVerdict = {
+  is_safe: boolean;
   risk_score: number;
   violated_controls: string[];
   remediation: string;
+  framework_id?: string | null;
+};
+
+type AnalyzeStoryData = {
+  verdict: UserStoryVerdict;
+  framework_changed_since_last_analysis: boolean;
+  framework_sync_message: string;
 };
 
 type SynapseResponse = {
   success: boolean;
   message: string;
-  data: SynapseData;
+  data: AnalyzeStoryData;
   error_code: string | null;
 };
+
+/** Forge may return a string or a pre-parsed object depending on bridge version. */
+function parseSynapseResponse(raw: unknown): SynapseResponse {
+  if (typeof raw === "string") {
+    return JSON.parse(raw || "{}") as SynapseResponse;
+  }
+  if (raw && typeof raw === "object") {
+    return raw as SynapseResponse;
+  }
+  return JSON.parse("{}") as SynapseResponse;
+}
+
+const FRAMEWORK_WEB_ORIGIN =
+  import.meta.env.VITE_FRAMEWORK_WEB_ORIGIN ?? "http://localhost:3000";
+
+function violatedControlHref(frameworkId: string, itemId: string): string {
+  const base = FRAMEWORK_WEB_ORIGIN.replace(/\/$/, "");
+  const url = new URL(`${base}/frameworks/${encodeURIComponent(frameworkId)}`);
+  url.searchParams.set("focus", itemId);
+  return url.toString();
+}
 
 function getRiskLevel(score: number): "low" | "moderate" | "high" {
   if (score <= 0.3) return "low";
@@ -36,11 +66,9 @@ function App() {
     setError(null);
     setResult(null);
     try {
-      const raw = await invoke<string>("analyzeStory", {
-        story_text: "stringstri",
-      });
-      const parsed: SynapseResponse = JSON.parse(raw ?? "{}");
-      setResult(parsed);
+      // Resolver loads story text from the issue description (or summary) via Jira REST.
+      const raw = await invoke<string | Record<string, unknown>>("analyzeStory", {});
+      setResult(parseSynapseResponse(raw));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -48,13 +76,16 @@ function App() {
     }
   };
 
-  const riskLevel = result?.data ? getRiskLevel(result.data.risk_score) : "low";
+  const verdict = result?.data?.verdict;
+  const riskLevel = verdict ? getRiskLevel(verdict.risk_score) : "low";
   const riskLabel =
     riskLevel === "low"
       ? "Low risk"
       : riskLevel === "moderate"
         ? "Moderate risk"
         : "High risk";
+
+  const frameworkId = verdict?.framework_id?.trim() || null;
 
   return (
     <div className="flex flex-col gap-4 max-w-full p-4">
@@ -72,7 +103,7 @@ function App() {
           {error}
         </p>
       )}
-      {result?.data && (
+      {verdict && result && (
         <article className="p-4 bg-white border border-[var(--ds-border,#dfe1e6)] rounded-lg shadow-sm text-left">
           {result.message && (
             <p className="m-0 mb-4 text-sm text-[var(--ds-text-subtle,#6b778c)]">
@@ -81,27 +112,40 @@ function App() {
           )}
           <div
             className={`flex flex-col gap-1 mb-4 p-3 rounded-md text-sm font-medium ${riskStyles[riskLevel]}`}
-            title={`Risk score: ${result.data.risk_score}`}
+            title={`Risk score: ${verdict.risk_score}`}
           >
             <span className="font-semibold uppercase tracking-wide">
               Risk score
             </span>
             <span>
-              {(result.data.risk_score * 100).toFixed(0)}% — {riskLabel}
+              {(verdict.risk_score * 100).toFixed(0)}% — {riskLabel}
             </span>
           </div>
           <section className="mb-4 last:mb-0">
             <h3 className="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--ds-text-subtle,#6b778c)]">
               Violated controls
             </h3>
-            {result.data.violated_controls.length === 0 ? (
+            {verdict.violated_controls.length === 0 ? (
               <p className="m-0 text-sm leading-normal text-[var(--ds-text,#172b4d)]">
                 None
               </p>
             ) : (
               <ul className="m-0 pl-5 text-sm leading-normal text-[var(--ds-text,#172b4d)] list-disc">
-                {result.data.violated_controls.map((c, i) => (
-                  <li key={i}>{c}</li>
+                {verdict.violated_controls.map((controlId) => (
+                  <li key={controlId}>
+                    {frameworkId ? (
+                      <a
+                        href={violatedControlHref(frameworkId, controlId)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-jira-blue underline hover:brightness-110"
+                      >
+                        {controlId}
+                      </a>
+                    ) : (
+                      controlId
+                    )}
+                  </li>
                 ))}
               </ul>
             )}
@@ -111,7 +155,7 @@ function App() {
               Remediation
             </h3>
             <p className="m-0 text-sm leading-normal text-[var(--ds-text,#172b4d)]">
-              {result.data.remediation}
+              {verdict.remediation}
             </p>
           </section>
         </article>

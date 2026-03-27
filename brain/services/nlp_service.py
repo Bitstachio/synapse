@@ -1,4 +1,5 @@
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any, Iterator
@@ -26,8 +27,27 @@ _STRONG_SHARED = 5
 _RISK_ORDER = {"Critical": 1.0, "High": 0.75, "Medium": 0.5, "Low": 0.25}
 
 
-def _prototype_json_path() -> Path:
-    return Path(__file__).resolve().parent.parent / "active-framework-response.json"
+def _resolve_prototype_json_path() -> Path:
+    """
+    Prefer env FRAMEWORK_PROTOTYPE_JSON, then brain/active-framework-response.json,
+    then committed brain/fixtures/active-framework-response.json (used on Render).
+    """
+    env_path = os.environ.get("FRAMEWORK_PROTOTYPE_JSON", "").strip()
+    if env_path:
+        p = Path(env_path)
+        if p.is_file():
+            return p
+    brain_root = Path(__file__).resolve().parent.parent
+    for candidate in (
+        brain_root / "active-framework-response.json",
+        brain_root / "fixtures" / "active-framework-response.json",
+    ):
+        if candidate.is_file():
+            return candidate
+    raise FileNotFoundError(
+        "No prototype framework JSON found. Set FRAMEWORK_PROTOTYPE_JSON or add "
+        "brain/fixtures/active-framework-response.json (or brain/active-framework-response.json)."
+    )
 
 
 def _significant_tokens(text: str) -> set[str]:
@@ -75,13 +95,8 @@ class NLPService:
     and flags instructions whose description terms overlap the user story (internal heuristic).
     """
 
-    def _load_prototype_framework_content(self) -> dict[str, Any]:
-        path = _prototype_json_path()
-        if not path.is_file():
-            raise FileNotFoundError(
-                f"Prototype framework file not found: {path}. "
-                "Add active-framework-response.json under the brain/ directory."
-            )
+    def _load_prototype_framework(self) -> tuple[dict[str, Any], str | None]:
+        path = _resolve_prototype_json_path()
         with open(path, encoding="utf-8") as f:
             payload = json.load(f)
         data = payload.get("data")
@@ -90,17 +105,20 @@ class NLPService:
         content = data.get("content")
         if not isinstance(content, dict):
             raise ValueError("Invalid JSON: expected data.content object")
-        return content
+        raw_id = data.get("_id")
+        framework_id = str(raw_id) if raw_id is not None else None
+        return content, framework_id
 
     def analyze_story(self, text: str) -> UserStoryVerdict:
         try:
-            framework_content = self._load_prototype_framework_content()
+            framework_content, framework_id = self._load_prototype_framework()
         except (OSError, ValueError, json.JSONDecodeError) as e:
             return UserStoryVerdict(
                 is_safe=False,
                 risk_score=1.0,
                 violated_controls=[],
                 remediation=f"Prototype could not load framework JSON: {e}",
+                framework_id=None,
             )
 
         story_words = re.findall(r"\b\w+\b", text.lower())
@@ -110,6 +128,7 @@ class NLPService:
                 risk_score=0.05,
                 violated_controls=[],
                 remediation="Story is too short for meaningful prototype overlap analysis.",
+                framework_id=framework_id,
             )
 
         story_tokens = _significant_tokens(text)
@@ -129,6 +148,7 @@ class NLPService:
                 risk_score=0.1,
                 violated_controls=[],
                 remediation="No instruction overlap detected (prototype term-overlap model).",
+                framework_id=framework_id,
             )
 
         risk = _risk_score_for_violations(violated)
@@ -144,6 +164,7 @@ class NLPService:
                 f"Prototype analysis: user story overlaps {len(ids)} instruction(s) by shared terms — "
                 f"review recommended. Matched IDs: {ids_preview}"
             ),
+            framework_id=framework_id,
         )
 
     @staticmethod

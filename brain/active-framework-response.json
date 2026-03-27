@@ -1,0 +1,1150 @@
+{
+  "data": {
+    "_id": "69c63b7b69470886178e48a0",
+    "name": "Wellbeing & Integration Safety for Employees (WISE)",
+    "version": "1.0.1",
+    "isActive": true,
+    "content": {
+      "categories": [
+        {
+          "id": "PR",
+          "name": "Data Privacy & Sovereignty",
+          "description": "Handling, storage, residency, and sovereignty of employee and workforce-related data in AI systems.",
+          "subcategories": [
+            {
+              "id": "PR.DM",
+              "name": "Data Minimization & Purpose Limitation",
+              "instructions": [
+                {
+                  "id": "PR.DM.001",
+                  "description": "Employee data used to train or tune internal AI must be limited to the minimum necessary for the stated business purpose and documented in a data inventory.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.DM.002",
+                  "description": "Workforce analytics models must not ingest fields prohibited by policy or law unless a lawful basis and legal review are recorded.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.DM.003",
+                  "description": "Third-party AI vendors must contractually commit to purpose limitation and prohibit secondary use of TD employee data for vendor model training without explicit consent and governance approval.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.DM.004",
+                  "description": "Synthetic employee data used for testing must be generated under differential privacy or k-anonymity thresholds approved by Enterprise Data Governance.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.DM.005",
+                  "description": "Aggregated workforce metrics must be reviewed for re-identification risk before publication to managers.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.DM.006",
+                  "description": "Personal information must not be duplicated into shadow AI tools or unapproved SaaS without the same controls as production systems.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.DM.007",
+                  "description": "Inference of sexual orientation, political opinion, or religious belief from text or behavior models must be prohibited except where strictly necessary and lawful.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.DM.008",
+                  "description": "Employee chat exports used for model evaluation must be pseudonymized and time-limited.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.DM.009",
+                  "description": "Voiceprints collected for authentication must not be repurposed for emotion or performance inference without separate consent.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.DM.010",
+                  "description": "Work-from-home network metadata must not be sold or shared with vendors for unrelated profiling.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "PR.RS",
+              "name": "Residency, Cross-Border & Sovereignty",
+              "instructions": [
+                {
+                  "id": "PR.RS.001",
+                  "description": "Employee PII processed by AI must remain in Canadian data residency paths where required by policy, contract, or regulatory interpretation.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.RS.002",
+                  "description": "Cross-border transfers of workforce data for AI processing require a documented lawful transfer mechanism under PIPEDA and vendor subprocessor maps.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.RS.003",
+                  "description": "Cloud AI inference endpoints must be pinned to approved regions and blocked from routing through non-approved jurisdictions.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.RS.004",
+                  "description": "Model hosting for HR-adjacent workloads must not silently failover to foreign regions without Security and Legal sign-off.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.RS.005",
+                  "description": "Subprocessors that may access employee prompts or outputs must be disclosed and risk-assessed before production use.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "PR.RS.006",
+                  "description": "Disaster-recovery drills must verify that backup AI stacks preserve the same residency constraints as production.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "PR.CM",
+              "name": "Consent, Notice & Employee Rights",
+              "instructions": [
+                {
+                  "id": "PR.CM.001",
+                  "description": "Employees must receive clear notice before AI processes their personal information for decisions that materially affect them.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.CM.002",
+                  "description": "Where consent is the lawful basis, withdrawal of consent must be technically feasible and must not be penalized through covert workflow barriers.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.CM.003",
+                  "description": "Access, correction, and deletion requests for AI-derived profiles must be fulfilled within PIPEDA-aligned timelines with auditable logs.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.CM.004",
+                  "description": "Automated decision systems affecting employment must offer a meaningful opportunity for human review upon request where required by law or policy.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.CM.005",
+                  "description": "Biometric or inferred sensitive attributes (e.g., health, union affiliation) must not be modeled without explicit lawful basis and governance review.",
+                  "risk_level": "Critical"
+                }
+              ]
+            },
+            {
+              "id": "PR.RT",
+              "name": "Retention, Deletion & Zero-Data Practices",
+              "instructions": [
+                {
+                  "id": "PR.RT.001",
+                  "description": "Prompt logs and chat history containing employee identifiers must follow approved retention schedules and support secure deletion.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.RT.002",
+                  "description": "Vendors offering Zero Data Retention for API calls must have that clause verified and monitored for drift in configuration.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.RT.003",
+                  "description": "Embeddings derived from employee documents must be purged when the underlying documents are deleted or when retention expires.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.RT.004",
+                  "description": "Backup and disaster-recovery copies of AI datasets must be included in data lifecycle management, not exempt from deletion policy.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "PR.RT.005",
+                  "description": "Model checkpoints that inadvertently memorize employee PII must be identified and remediated through redaction, retraining, or destruction.",
+                  "risk_level": "Critical"
+                }
+              ]
+            },
+            {
+              "id": "PR.AC",
+              "name": "Access Control & Segregation",
+              "instructions": [
+                {
+                  "id": "PR.AC.001",
+                  "description": "Role-based access to HR AI tools must enforce least privilege and segregate sensitive populations' data where required.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.AC.002",
+                  "description": "Privileged prompts that can exfiltrate colleague data must be blocked by policy and technical guardrails.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.AC.003",
+                  "description": "Contractors' access to workforce AI systems must be time-bound and logged.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "PR.AC.004",
+                  "description": "Shared copilots must not retain session context across users in ways that leak one employee's information to another.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "PR.ZD",
+              "name": "Zero Trust & Employee-Owned Endpoints",
+              "instructions": [
+                {
+                  "id": "PR.ZD.001",
+                  "description": "AI assistants on BYOD must enforce containerization or MDM policies that prevent local caching of regulated employee data outside approved vaults.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PR.ZD.002",
+                  "description": "Clipboard synchronization between corporate and personal profiles must not leak TD prompts to consumer LLM apps.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PR.ZD.003",
+                  "description": "Browser autofill of credentials into AI chat UIs must be blocked on workstations handling confidential HR data.",
+                  "risk_level": "High"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "FB",
+          "name": "Algorithmic Fairness & Bias",
+          "description": "Preventing unlawful discrimination and unfair treatment in AI-supported HR, talent, and performance processes.",
+          "subcategories": [
+            {
+              "id": "FB.HR",
+              "name": "Hiring, Promotion & Talent",
+              "instructions": [
+                {
+                  "id": "FB.HR.001",
+                  "description": "Screening or ranking models must be validated for disparate impact across protected grounds under Canadian human rights law before deployment.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "FB.HR.002",
+                  "description": "Training data must be audited for historical bias (e.g., gendered language, prestige bias in schools) and mitigated with documented techniques.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "FB.HR.003",
+                  "description": "AI-generated job descriptions must be reviewed to avoid coded bias and unnecessary credential inflation.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "FB.HR.004",
+                  "description": "Automated rejection of candidates must not occur without human oversight where policy requires it.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "FB.HR.005",
+                  "description": "Talent marketplace matching must not encode favoritism toward proxies correlated with protected attributes.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "FB.HR.006",
+                  "description": "Explainability artifacts for ranking must be available to internal audit and civil rights reviewers.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "FB.RP",
+              "name": "Performance, Ratings & Productivity Scores",
+              "instructions": [
+                {
+                  "id": "FB.RP.001",
+                  "description": "Continuous inference scores must not substitute for managerial judgment without disclosure and appeal rights.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "FB.RP.002",
+                  "description": "Models using keystroke, email volume, or calendar density as productivity signals must be prohibited unless narrowly justified and equity-reviewed.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "FB.RP.003",
+                  "description": "Calibration of AI-assisted ratings must include checks for team-level and site-level bias.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "FB.RP.004",
+                  "description": "Feedback summarization tools must flag potential stereotype reinforcement before distribution.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "FB.IV",
+              "name": "Intersectionality & Subgroups",
+              "instructions": [
+                {
+                  "id": "FB.IV.001",
+                  "description": "Fairness metrics must be reported for intersectional subgroups where sample sizes permit, not only single-axis aggregates.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "FB.IV.002",
+                  "description": "Small-group privacy must be balanced with fairness via minimum cohort thresholds and noise addition where appropriate.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "FB.IV.003",
+                  "description": "Accommodation-related data must never be used to penalize performance in model features.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "FB.IV.004",
+                  "description": "Language models serving francophone or Indigenous employees must be tested for disparate error rates.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "FB.IV.005",
+                  "description": "English-only NLP features must not disadvantage employees whose primary language is French or a heritage language without accommodation.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "FB.IV.006",
+                  "description": "Caregiver status inferred from calendar patterns must not feed performance or reliability models.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "FB.IV.007",
+                  "description": "Age-related proxies (e.g., graduation year) must be excluded or heavily regularized in promotion models.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "FB.EV",
+              "name": "Evaluation, Monitoring & Redress",
+              "instructions": [
+                {
+                  "id": "FB.EV.001",
+                  "description": "Post-deployment drift detection must include fairness monitors tied to HR outcomes.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "FB.EV.002",
+                  "description": "Employee complaints alleging algorithmic discrimination must route to a defined investigation protocol.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "FB.EV.003",
+                  "description": "Third-party bias audits must be procured for high-risk workforce AI at a cadence set by Model Risk Management.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "FB.SG",
+              "name": "Statistical Parity & Governance Metrics",
+              "instructions": [
+                {
+                  "id": "FB.SG.001",
+                  "description": "Fairness dashboards must define success metrics (e.g., equalized odds, demographic parity) before deployment, not post-hoc.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "FB.SG.002",
+                  "description": "Proxy discrimination via correlated non-protected variables (e.g., zip code) must be tested and mitigated.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "FB.SG.003",
+                  "description": "Model documentation must record protected-attribute testing limitations due to small sample sizes.",
+                  "risk_level": "Medium"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "PW",
+          "name": "Psychological Safety & Wellbeing",
+          "description": "Mitigating burnout, automation anxiety, and wellbeing harms from AI-mediated work.",
+          "subcategories": [
+            {
+              "id": "PW.BU",
+              "name": "Burnout, Pace & Load",
+              "instructions": [
+                {
+                  "id": "PW.BU.001",
+                  "description": "AI-driven workload allocation must not maximize throughput in ways that ignore sustainable capacity or rest norms.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PW.BU.002",
+                  "description": "After-hours nudges from AI assistants must be disabled by default for non-critical roles.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "PW.BU.003",
+                  "description": "Managers must not use AI sentiment analysis on private messages as a proxy for 'engagement' without safeguards.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PW.BU.004",
+                  "description": "Escalation bots must not create always-on pressure by unlimited follow-up without human triage rules.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "PW.AX",
+              "name": "Automation Anxiety & Role Threat",
+              "instructions": [
+                {
+                  "id": "PW.AX.001",
+                  "description": "Communications about AI must avoid fear-based framing and must pair capability change with reskilling commitments.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "PW.AX.002",
+                  "description": "Job-impact assessments must precede large-scale automation of tasks currently performed by employees.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PW.AX.003",
+                  "description": "Employees must have forums to raise concerns about AI monitoring without retaliation.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PW.AX.004",
+                  "description": "AI must not be positioned as an omniscient evaluator of individual worth or future employability.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "PW.AX.005",
+                  "description": "Contractors and gig workers must receive the same AI-impact disclosures as full-time employees where feasible.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "PW.SK",
+              "name": "Skill Atrophy & Deskilling",
+              "instructions": [
+                {
+                  "id": "PW.SK.001",
+                  "description": "Critical human judgment skills (credit risk, fraud escalation, compliance) must retain practice pathways when AI assists.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PW.SK.002",
+                  "description": "Over-reliance on code completion or document drafting AI must be countered with periodic unassisted validation exercises for licensed roles.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "PW.SK.003",
+                  "description": "Succession planning must account for erosion of tacit knowledge when AI intermediates core workflows.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "PW.SK.004",
+                  "description": "Novices must not be onboarded solely through AI tutors without human mentorship checkpoints.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "PW.SK.005",
+                  "description": "Rotational job shadowing must be preserved where AI compresses onboarding timelines.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "PW.SK.006",
+                  "description": "Expert review sampling must increase when model confidence is low, to prevent silent error accumulation.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "PW.WD",
+              "name": "Wellbeing Data & Sensitive Inference",
+              "instructions": [
+                {
+                  "id": "PW.WD.001",
+                  "description": "Inference of mental health status from text, voice, or behavior must be prohibited in workplace AI except where legally authorized and consented.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PW.WD.002",
+                  "description": "Wellness chatbots must include crisis escalation paths and must not provide medical diagnoses.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "PW.SO",
+              "name": "Social & Team Dynamics",
+              "instructions": [
+                {
+                  "id": "PW.SO.001",
+                  "description": "AI must not be used to rank 'collaboration quality' from private messages without consent and narrow purpose.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PW.SO.002",
+                  "description": "Team health scores inferred by AI must not replace skip-level conversations or HRBP engagement.",
+                  "risk_level": "Medium"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "TE",
+          "name": "Transparency & Explainability",
+          "description": "Eliminating unjustified black-box decisions and ensuring appropriate disclosure of AI use.",
+          "subcategories": [
+            {
+              "id": "TE.DS",
+              "name": "Decision Support & Model Disclosure",
+              "instructions": [
+                {
+                  "id": "TE.DS.001",
+                  "description": "Employees must know when a material decision is materially informed or automated by AI, including vendor tools.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "TE.DS.002",
+                  "description": "High-risk HR models must maintain model cards summarizing intent, data, limitations, and known failure modes.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "TE.DS.003",
+                  "description": "Probabilistic outputs must be presented with uncertainty language, not false precision.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "TE.DS.004",
+                  "description": "Leaders must not claim human-only review when AI materially ranked or filtered inputs.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "TE.DS.005",
+                  "description": "If a vendor cannot disclose architecture, TD must document compensating controls and residual opacity risk.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "TE.DC",
+              "name": "Documentation & Audit Trail",
+              "instructions": [
+                {
+                  "id": "TE.DC.001",
+                  "description": "Each production workforce AI must have an owner, version, and change log accessible to audit.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "TE.DC.002",
+                  "description": "Explainability artifacts must be retained in line with records management for the life of relevant employment disputes.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "TE.DC.003",
+                  "description": "Downstream systems must log which model version produced a recommendation tied to an employee record.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "TE.UF",
+              "name": "User-Facing Clarity",
+              "instructions": [
+                {
+                  "id": "TE.UF.001",
+                  "description": "Copilot responses that influence HR policy interpretation must cite authoritative sources or flag uncertainty.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "TE.UF.002",
+                  "description": "Managers must be trained to explain AI-assisted summaries to employees in plain language.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "TE.UF.003",
+                  "description": "Synthetic media (voice, video) used in internal comms must be labeled as AI-generated.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "TE.AL",
+              "name": "Adversarial & Misuse Transparency",
+              "instructions": [
+                {
+                  "id": "TE.AL.001",
+                  "description": "When models are known to fabricate citations, internal policy copilots must display a persistent hallucination warning.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "TE.AL.002",
+                  "description": "Employees must be able to report incorrect AI outputs that affected them, with ticket linkage to model version.",
+                  "risk_level": "Medium"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "SI",
+          "name": "Security & Systems Integrity",
+          "description": "Protecting confidentiality, integrity, and availability of AI systems and data.",
+          "subcategories": [
+            {
+              "id": "SI.LK",
+              "name": "Data Leakage & Exfiltration",
+              "instructions": [
+                {
+                  "id": "SI.LK.001",
+                  "description": "Employee prompts must be scanned for attempts to embed customer account numbers, tokens, or classified project identifiers.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "SI.LK.002",
+                  "description": "Clipboard and attachment upload paths to external LLMs must be controlled by DLP policies.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "SI.LK.003",
+                  "description": "Fine-tuning datasets must be scanned to prevent accidental inclusion of secrets or keys.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "SI.LK.004",
+                  "description": "Model outputs must be filtered before email or ticketing to prevent regurgitation of sensitive training snippets.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "SI.PJ",
+              "name": "Prompt Injection, Jailbreaks & Abuse",
+              "instructions": [
+                {
+                  "id": "SI.PJ.001",
+                  "description": "Internal copilots must treat untrusted text (emails, tickets) as untrusted and must not execute embedded instructions that override system policy.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "SI.PJ.002",
+                  "description": "Red-team exercises must include indirect prompt injection scenarios annually for customer-facing AI.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "SI.PJ.003",
+                  "description": "Tool-using agents must not be granted broad write access without human confirmation boundaries.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "SI.PJ.004",
+                  "description": "Jailbreak attempts must be logged and fed into abuse detection without storing unnecessary personal content.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "SI.PJ.005",
+                  "description": "Multi-agent systems must not pass unfiltered user content through privileged toolchains without sanitization.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "SI.AC",
+              "name": "Availability, Supply Chain & Model Integrity",
+              "instructions": [
+                {
+                  "id": "SI.AC.001",
+                  "description": "Third-party model APIs must be assessed for availability SLAs and graceful degradation for critical HR workflows.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "SI.AC.002",
+                  "description": "Open-source model weights integrated internally must be verified for supply-chain integrity (hashing, provenance).",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "SI.AC.003",
+                  "description": "Insider threats to poison training data must be mitigated through access controls and anomaly detection.",
+                  "risk_level": "High"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "HL",
+          "name": "Human-in-the-Loop",
+          "description": "Defining human authority, overrides, and kill switches for AI-mediated outcomes.",
+          "subcategories": [
+            {
+              "id": "HL.KS",
+              "name": "Kill Switches & Emergency Stop",
+              "instructions": [
+                {
+                  "id": "HL.KS.001",
+                  "description": "Production workforce AI must have a documented kill switch or traffic block owned by Operations and Security.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "HL.KS.002",
+                  "description": "Degraded-mode playbooks must exist when models are disabled, including manual processes.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "HL.KS.003",
+                  "description": "Incident severity thresholds must trigger automatic suspension of AI features pending review.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "HL.AO",
+              "name": "Authority, Override & Escalation",
+              "instructions": [
+                {
+                  "id": "HL.AO.001",
+                  "description": "Managers must retain authority to override AI recommendations affecting employment when policy allows.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "HL.AO.002",
+                  "description": "AI must not auto-execute irreversible HR actions (termination letters, formal warnings) without human approval.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "HL.AO.003",
+                  "description": "Unionized environments must respect collective agreement requirements for technology and discipline.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "HL.AO.004",
+                  "description": "Escalation paths for contested AI outputs must reach a human with appropriate seniority.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "HL.FJ",
+              "name": "Final Judgment & Professional Responsibility",
+              "instructions": [
+                {
+                  "id": "HL.FJ.001",
+                  "description": "Licensed professionals must not delegate professional duties to AI in ways that breach regulatory obligations.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "HL.FJ.002",
+                  "description": "Credit and risk decisions must remain attributable to accountable officers per OSFI expectations for model risk and governance.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "HL.FJ.003",
+                  "description": "HR business partners must verify AI-generated disciplinary narratives for factual accuracy before issuance.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "HL.ET",
+              "name": "Ethics & Professional Judgment",
+              "instructions": [
+                {
+                  "id": "HL.ET.001",
+                  "description": "Ethics hotline triage bots must escalate credible misconduct reports to humans within defined SLAs.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "HL.ET.002",
+                  "description": "AI must not determine whistleblower credibility scores.",
+                  "risk_level": "Critical"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "CL",
+          "name": "Change Management & Literacy",
+          "description": "Upskilling, emotional transition, and organizational readiness for AI.",
+          "subcategories": [
+            {
+              "id": "CL.UP",
+              "name": "Upskilling & Role Redesign",
+              "instructions": [
+                {
+                  "id": "CL.UP.001",
+                  "description": "Role profiles must be updated to specify human-AI task splits and required competencies.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "CL.UP.002",
+                  "description": "Training budgets must cover prompt literacy, verification skills, and tool-specific certification.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "CL.UP.003",
+                  "description": "Performance metrics must not punish employees during good-faith learning curves for mandated AI tools.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "CL.TR",
+              "name": "Transition Support & Inclusion",
+              "instructions": [
+                {
+                  "id": "CL.TR.001",
+                  "description": "Accessibility reviews must precede deployment of AI workplace tools for employees with disabilities.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "CL.TR.002",
+                  "description": "Change communications must include union and employee resource group consultation where applicable.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "CL.TR.003",
+                  "description": "Relocation or displacement support must be offered when AI materially displaces tasks.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "CL.LT",
+              "name": "Literacy, Ethics & Responsible Use",
+              "instructions": [
+                {
+                  "id": "CL.LT.001",
+                  "description": "All employees must complete responsible-AI training covering privacy, confidentiality, and anti-discrimination.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "CL.LT.002",
+                  "description": "Developers must be trained on secure SDLC for ML and on TD's model risk policies.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "CL.LT.003",
+                  "description": "Gamified surveillance of 'AI adoption rates' by individual must be prohibited.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "CL.DV",
+              "name": "Diversity of AI Exposure",
+              "instructions": [
+                {
+                  "id": "CL.DV.001",
+                  "description": "Front-line and back-office cohorts must receive equitable access to productivity AI, avoiding digital divide inequity.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "CL.DV.002",
+                  "description": "Mandatory AI use must include offline alternatives for employees with documented barriers.",
+                  "risk_level": "High"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "PA",
+          "name": "Performance & Accountability",
+          "description": "Clarifying liability, auditability, and ownership for AI-assisted failures.",
+          "subcategories": [
+            {
+              "id": "PA.LB",
+              "name": "Liability & Ownership",
+              "instructions": [
+                {
+                  "id": "PA.LB.001",
+                  "description": "Contracts must allocate liability for vendor model errors affecting employees and assign indemnities where feasible.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PA.LB.002",
+                  "description": "Managers remain accountable for decisions they approve, including those drafted by AI.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PA.LB.003",
+                  "description": "Product owners must maintain runbooks for incidents caused by model hallucinations in HR workflows.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "PA.AD",
+              "name": "Auditability & Forensics",
+              "instructions": [
+                {
+                  "id": "PA.AD.001",
+                  "description": "Forensic logs must support reconstruction of what the model saw and output for employment investigations.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PA.AD.002",
+                  "description": "Privileged legal advice must not be inadvertently ingested into retrievable corporate AI corpora.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "PA.AD.003",
+                  "description": "Internal audit must have sampling rights over AI-influenced HR decisions.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "PA.ES",
+              "name": "Escalation & Whistleblowing",
+              "instructions": [
+                {
+                  "id": "PA.ES.001",
+                  "description": "Channels must exist to report unsafe or non-compliant AI use without fear of reprisal.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "PA.ES.002",
+                  "description": "Regulatory notifications for AI incidents must follow Enterprise Risk and Legal playbooks.",
+                  "risk_level": "Critical"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "VE",
+          "name": "Workplace Surveillance & Ethics",
+          "description": "Boundaries on productivity tracking, behavior inference, and algorithmic management.",
+          "subcategories": [
+            {
+              "id": "VE.TR",
+              "name": "Tracking, Monitoring & Keystroke Analytics",
+              "instructions": [
+                {
+                  "id": "VE.TR.001",
+                  "description": "Keystroke logging and continuous screen capture for productivity must be prohibited except in narrowly scoped fraud investigations with legal approval.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "VE.TR.002",
+                  "description": "Badge, VPN, or badge-swipe data must not be fused with AI to infer 'slack' in ways that circumvent privacy expectations.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "VE.TR.003",
+                  "description": "Camera or microphone analytics in workspaces must comply with privacy law and collective agreements.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "VE.TR.004",
+                  "description": "Location tracking on personal devices for performance must be opt-in and narrowly scoped.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "VE.SH",
+              "name": "Shadow AI & Unapproved Tools",
+              "instructions": [
+                {
+                  "id": "VE.SH.001",
+                  "description": "Employees must be prohibited from pasting confidential TD data into consumer LLM apps without approved enterprise controls.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "VE.SH.002",
+                  "description": "Browser extensions that send page content to external models must be blocked by default.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "VE.SH.003",
+                  "description": "Discovery programs must identify unauthorized AI usage and migrate users to approved tools.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "VE.SH.004",
+                  "description": "Bring-your-own-model endpoints must not be connected to HR systems without architecture review.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "VE.SH.005",
+                  "description": "Personal mobile devices used for work must be guided to enterprise AI wrappers, not consumer apps, for TD confidential topics.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "VE.SH.006",
+                  "description": "GitHub Copilot-style tools must use enterprise agreements that exclude training on private code without opt-in.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "VE.SH.007",
+                  "description": "Employees must not fine-tune external models on TD performance reviews or investigation notes.",
+                  "risk_level": "Critical"
+                }
+              ]
+            },
+            {
+              "id": "VE.AM",
+              "name": "Algorithmic Management & Nudging",
+              "instructions": [
+                {
+                  "id": "VE.AM.001",
+                  "description": "AI must not autonomously allocate tasks, breaks, or discipline based on opaque productivity scores.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "VE.AM.002",
+                  "description": "Gamified leaderboards driven by AI-inferred productivity must be banned or heavily restricted by policy.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "VE.AM.003",
+                  "description": "Scheduling AIs must respect labor standards, rest periods, and predictable schedules where regulated.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "VE.AM.004",
+                  "description": "Sentiment-based 'risk scores' on employees must not drive punitive actions without independent evidence.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "VE.AM.005",
+                  "description": "AI must not infer 'presenteeism' scores from after-hours email timestamps without contextual human review.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "VE.AM.006",
+                  "description": "Customer satisfaction scores must not be attributed to individual front-line employees via opaque composite indices without appeal.",
+                  "risk_level": "Medium"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "RL",
+          "name": "Regulatory & Legal Alignment",
+          "description": "Alignment with OSFI expectations, PIPEDA, Canadian human rights, and employment law.",
+          "subcategories": [
+            {
+              "id": "RL.OS",
+              "name": "OSFI & Prudential Model Risk",
+              "instructions": [
+                {
+                  "id": "RL.OS.001",
+                  "description": "AI systems that inform credit, capital, liquidity, or operational risk must conform to Enterprise-Wide Model Risk Management and OSFI guidance on model risk.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "RL.OS.002",
+                  "description": "Material AI changes must pass appropriate governance gates, independent review, and documentation commensurate with risk tier.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "RL.OS.003",
+                  "description": "Outsourcing of AI to third parties must meet OSFI outsourcing and third-party risk expectations, including monitoring and contingency.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "RL.OS.004",
+                  "description": "Business continuity plans must cover AI service disruption scenarios affecting critical operations.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "RL.OS.005",
+                  "description": "Third-party AI that materially affects financial reporting controls must be in scope for internal controls over financial reporting testing.",
+                  "risk_level": "Critical"
+                }
+              ]
+            },
+            {
+              "id": "RL.PI",
+              "name": "PIPEDA & Privacy Commissioner Expectations",
+              "instructions": [
+                {
+                  "id": "RL.PI.001",
+                  "description": "Personal information collection, use, and disclosure for AI must adhere to PIPEDA principles, including accountability and openness.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "RL.PI.002",
+                  "description": "Privacy impact assessments must be completed before deploying AI that processes sensitive employee data at scale.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "RL.PI.003",
+                  "description": "Automated decision-making that could significantly affect individuals must be assessed for transparency and individual recourse obligations.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "RL.PI.004",
+                  "description": "De-identified datasets must be reassessed when linked with new data sources that enable re-identification.",
+                  "risk_level": "High"
+                }
+              ]
+            },
+            {
+              "id": "RL.CA",
+              "name": "Canadian Human Rights & Employment Law",
+              "instructions": [
+                {
+                  "id": "RL.CA.001",
+                  "description": "Workforce AI must be designed and monitored for compliance with federal and provincial human rights codes applicable to TD operations.",
+                  "risk_level": "Critical"
+                },
+                {
+                  "id": "RL.CA.002",
+                  "description": "Electronic monitoring statutes in applicable provinces must be reviewed before deploying surveillance-adjacent AI.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "RL.CA.003",
+                  "description": "Union certification and labor relations obligations must be honored when AI changes terms and conditions of work.",
+                  "risk_level": "High"
+                },
+                {
+                  "id": "RL.CA.004",
+                  "description": "Whistleblower and reprisal protections must extend to reporting of unlawful AI practices.",
+                  "risk_level": "Medium"
+                }
+              ]
+            },
+            {
+              "id": "RL.EM",
+              "name": "Emerging AI Regulation & Standards",
+              "instructions": [
+                {
+                  "id": "RL.EM.001",
+                  "description": "The legal team must track Bill C-27 / AIDA and related developments and map obligations to workforce AI inventory.",
+                  "risk_level": "Medium"
+                },
+                {
+                  "id": "RL.EM.002",
+                  "description": "Voluntary standards (e.g., ISO/IEC 42001) may be adopted as internal control frameworks where they strengthen governance.",
+                  "risk_level": "Medium"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "createdAt": "2026-03-27T08:10:35.542Z",
+    "updatedAt": "2026-03-27T08:10:50.652Z",
+    "__v": 0
+  },
+  "meta": {
+    "timestamp": "2026-03-27T16:40:45.541Z",
+    "path": "/api/v1/frameworks/active"
+  }
+}
