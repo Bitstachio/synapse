@@ -21,6 +21,7 @@ async def analyze_user_story(
         message="Synapse analysis complete (prototype)",
         data=AnalyzeStoryResult(
             verdict=verdict,
+            received_story_text=payload.story_text,
             framework_changed_since_last_analysis=False,
             framework_sync_message=(
                 "Prototype: using local active-framework-response.json; "

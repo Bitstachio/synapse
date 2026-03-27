@@ -19,7 +19,8 @@ _STOPWORDS = frozenset(
     """.split()
 )
 
-_MIN_STORY_WORDS = 4
+# Minimum word count before running overlap analysis (avoid noise on empty strings).
+_MIN_STORY_WORDS = 2
 _MIN_SHARED_TERMS = 2
 _OVERLAP_RATIO = 0.14
 _STRONG_SHARED = 5
