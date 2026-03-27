@@ -7,10 +7,6 @@ class AnalyzeStoryResult(BaseModel):
     """HTTP payload for POST /analyze-story: NLP verdict plus framework freshness metadata."""
 
     verdict: UserStoryVerdict
-    received_story_text: str = Field(
-        ...,
-        description="Exact story_text received on the request body (for debugging clients).",
-    )
     framework_changed_since_last_analysis: bool = Field(
         ...,
         description="True if the active framework updatedAt is newer than the last analysis snapshot (for cache invalidation).",
