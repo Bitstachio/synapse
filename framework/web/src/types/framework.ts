@@ -28,6 +28,6 @@ export interface Framework {
   version: string;
   isActive: boolean;
   content: FrameworkContent;
-  /** ISO 8601 string from API; used for optimistic locking (lastKnownUpdatedAt) on update */
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }

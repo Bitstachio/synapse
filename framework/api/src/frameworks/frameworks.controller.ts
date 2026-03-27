@@ -43,14 +43,22 @@ export class FrameworksController {
   }
 
   @Get()
-  @ApiOperation({ summary: "List all frameworks" })
+  @ApiOperation({
+    summary: "List all frameworks",
+    description:
+      "Each item includes `createdAt` and `updatedAt` (last modified) for the framework record.",
+  })
   @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
   async findAll() {
     return this.frameworksService.findAll();
   }
 
   @Get("active")
-  @ApiOperation({ summary: "Get the currently active framework used for auditing" })
+  @ApiOperation({
+    summary: "Get the currently active framework used for auditing",
+    description:
+      "Includes `createdAt` and `updatedAt` on the framework record.",
+  })
   @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
   async findActive() {
     return this.frameworksService.findActive();
@@ -99,7 +107,11 @@ export class FrameworksController {
   }
 
   @Get(":id")
-  @ApiOperation({ summary: "Get a framework by ID" })
+  @ApiOperation({
+    summary: "Get a framework by ID",
+    description:
+      "Includes `createdAt` and `updatedAt` for the framework document.",
+  })
   @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
   async findOne(@Param("id") id: string) {
     return this.frameworksService.findOne(id);

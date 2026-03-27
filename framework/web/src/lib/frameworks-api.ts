@@ -110,7 +110,8 @@ export type FrameworkListItem = {
   name: string;
   version: string;
   isActive: boolean;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 type ListFrameworksResponse = {

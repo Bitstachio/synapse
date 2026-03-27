@@ -1,9 +1,13 @@
 import type { Framework } from "@/types/framework";
 
+const MOCK_TS = "2026-02-01T12:00:00.000Z";
+
 export const mockFramework: Framework = {
   name: "Synapse Wellbeing Governance",
   version: "2026.02",
   isActive: true,
+  createdAt: MOCK_TS,
+  updatedAt: MOCK_TS,
   content: {
     categories: [
       {
