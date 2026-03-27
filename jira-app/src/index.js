@@ -9,18 +9,59 @@ const SYNAPSE_ANALYZE_URL =
 
 /**
  * Flatten Jira issue description (Atlassian Document Format) to plain text.
+ * Handles doc/paragraph/text, lists, headings, hardBreak, and nested content.
  */
 function adfToPlainText(node) {
   if (node == null) return "";
   if (typeof node === "string") return node;
+
+  // Leaf text node
   if (typeof node.text === "string") return node.text;
-  if (Array.isArray(node)) return node.map(adfToPlainText).join(" ");
-  if (node.content != null) return adfToPlainText(node.content);
+
+  if (Array.isArray(node)) {
+    return node.map(adfToPlainText).filter(Boolean).join(" ");
+  }
+
+  if (typeof node === "object") {
+    const chunks = [];
+    if (Array.isArray(node.content)) {
+      chunks.push(node.content.map(adfToPlainText).filter(Boolean).join(" "));
+    }
+    // Some nodes nest differently (e.g. codeBlock with text in content)
+    if (node.type === "hardBreak") {
+      chunks.push(" ");
+    }
+    return chunks.join(" ").trim();
+  }
+
   return "";
 }
 
 /**
- * Load description (preferred) or summary for the current issue.
+ * Build the longest possible story string from summary + description.
+ * Jira Cloud stores description as ADF; empty editor can yield { doc with empty content }.
+ */
+function buildStoryFromIssueFields(fields) {
+  const summary = (fields?.summary || "").trim();
+
+  const rawDesc = fields?.description;
+  let descText = "";
+  if (rawDesc == null) {
+    descText = "";
+  } else if (typeof rawDesc === "string") {
+    descText = rawDesc.trim();
+  } else {
+    descText = adfToPlainText(rawDesc).trim();
+  }
+
+  const parts = [];
+  if (summary) parts.push(summary);
+  if (descText) parts.push(descText);
+  return parts.join("\n\n").trim();
+}
+
+/**
+ * Load summary + description for the current issue.
  */
 async function getIssueStoryText(issueKey) {
   const res = await api
@@ -35,14 +76,16 @@ async function getIssueStoryText(issueKey) {
   }
 
   const data = await res.json();
-  const descText = adfToPlainText(data.fields?.description).trim();
-  const summary = (data.fields?.summary || "").trim();
+  const combined = buildStoryFromIssueFields(data.fields);
 
-  if (descText.length >= 10) return descText;
-  if (summary.length >= 10) return summary;
-  if (descText.length > 0) return descText;
-  if (summary.length > 0) return summary;
-  return "No description or summary available for analysis.";
+  if (combined.length >= 10) {
+    return combined;
+  }
+
+  return (
+    combined ||
+    "No description or summary available for analysis."
+  );
 }
 
 resolver.define("fetchLabels", async (req) => {
