@@ -3,14 +3,15 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
 from fastapi import FastAPI, HTTPException
 from google import genai
 
 from api.v1.analyze import router as analyze_router
 from core.exceptions import global_exception_handler, http_exception_handler
 from models.response_schema import StandardResponse
-
-load_dotenv(Path(__file__).resolve().parent / ".env")
 
 # Use a current model id from https://ai.google.dev/gemini-api/docs/models
 GEMINI_TEST_MODEL = "gemini-2.5-flash"

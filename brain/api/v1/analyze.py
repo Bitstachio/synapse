@@ -1,23 +1,30 @@
 from fastapi import APIRouter
 
+from models.analysis_result import AnalyzeStoryResult
 from models.response_schema import StandardResponse
 from models.user_story_request import UserStoryRequest
-from models.user_story_verdict import UserStoryVerdict
+from services.active_framework_service import ActiveFrameworkService
 from services.nlp_service import NLPService
 
 router = APIRouter()
 
-# Instantiate the service
-# Later, we can use 'Depends' for cleaner dependency injection
+active_framework_service = ActiveFrameworkService()
 nlp_service = NLPService()
 
 
-@router.post("/analyze-story", response_model=StandardResponse[UserStoryVerdict])
+@router.post("/analyze-story", response_model=StandardResponse[AnalyzeStoryResult])
 async def analyze_user_story(
     payload: UserStoryRequest,
-) -> StandardResponse[UserStoryVerdict]:
-    result = await nlp_service.analyze_story(payload.story_text)
+) -> StandardResponse[AnalyzeStoryResult]:
+    content, changed, sync_message = await active_framework_service.get_active_framework_with_freshness()
+    verdict = nlp_service.analyze_story(payload.story_text, content)
 
-    return StandardResponse[UserStoryVerdict](
-        success=True, message="Synapse analysis complete", data=result
+    return StandardResponse[AnalyzeStoryResult](
+        success=True,
+        message="Synapse analysis complete",
+        data=AnalyzeStoryResult(
+            verdict=verdict,
+            framework_changed_since_last_analysis=changed,
+            framework_sync_message=sync_message,
+        ),
     )
