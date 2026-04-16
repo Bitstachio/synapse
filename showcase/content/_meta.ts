@@ -1,7 +1,7 @@
 import { MetaRecord } from "nextra";
 
 const meta: MetaRecord = {
-  "representative-texts": {},
+  objectives: {},
 };
 
 export default meta;
