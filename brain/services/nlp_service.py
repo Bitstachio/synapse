@@ -167,6 +167,7 @@ class NLPService:
             ),
             framework_id=framework_id,
         )
+        
 
     @staticmethod
     def generate_audit_context(framework: dict[str, Any]) -> str:
