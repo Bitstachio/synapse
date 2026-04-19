@@ -1,31 +1,18 @@
 import json
+import logging
 import os
-import re
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Optional
+
+from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
 
 from models.user_story_verdict import UserStoryVerdict
 
-# Prototype: term overlap between user story and each instruction description (no external LLM).
-# Tune these if you get too many or too few flags.
-_STOPWORDS = frozenset(
-    """
-    that this with from have been were they their will shall must should would could
-    about into such other than then them these those when what which while where were
-    not for and are but may any all can its our out use per via may the a an to of
-    in on at by be is it as or if so no we he she his her has had did does doing
-    being each both few more most some same such only same also just over under
-    through between after before during without within against among
-    """.split()
-)
+logger = logging.getLogger(__name__)
 
-# Minimum word count before running overlap analysis (avoid noise on empty strings).
-_MIN_STORY_WORDS = 2
-_MIN_SHARED_TERMS = 2
-_OVERLAP_RATIO = 0.14
-_STRONG_SHARED = 5
-
-_RISK_ORDER = {"Critical": 1.0, "High": 0.75, "Medium": 0.5, "Low": 0.25}
+_DEFAULT_OPENAI_MODEL: str = "gpt-4o-mini"
+_RISK_UNSAFE_THRESHOLD: float = 0.5
 
 
 def _resolve_prototype_json_path() -> Path:
@@ -33,12 +20,12 @@ def _resolve_prototype_json_path() -> Path:
     Prefer env FRAMEWORK_PROTOTYPE_JSON, then brain/active-framework-response.json,
     then committed brain/fixtures/active-framework-response.json (used on Render).
     """
-    env_path = os.environ.get("FRAMEWORK_PROTOTYPE_JSON", "").strip()
+    env_path: str = os.environ.get("FRAMEWORK_PROTOTYPE_JSON", "").strip()
     if env_path:
         p = Path(env_path)
         if p.is_file():
             return p
-    brain_root = Path(__file__).resolve().parent.parent
+    brain_root: Path = Path(__file__).resolve().parent.parent
     for candidate in (
         brain_root / "active-framework-response.json",
         brain_root / "fixtures" / "active-framework-response.json",
@@ -51,66 +38,100 @@ def _resolve_prototype_json_path() -> Path:
     )
 
 
-def _significant_tokens(text: str) -> set[str]:
-    words = re.findall(r"\b[a-z][a-z0-9]{3,}\b", text.lower())
-    return {w for w in words if w not in _STOPWORDS}
+class _RiskScoreSchema(BaseModel):
+    """
+    Strict schema that the OpenAI model MUST emit via Structured Outputs.
+    Extend here (and in the prompt) when you later want more fields in the JSON.
+    """
 
-
-def _iter_instructions(content: dict[str, Any]) -> Iterator[dict[str, Any]]:
-    for cat in content.get("categories", []):
-        for sub in cat.get("subcategories", []):
-            for instr in sub.get("instructions", []):
-                iid = instr.get("id")
-                desc = instr.get("description", "")
-                if iid and desc:
-                    yield instr
-
-
-def _violation_overlap(story_tokens: set[str], instruction_tokens: set[str]) -> bool:
-    if not instruction_tokens:
-        return False
-    shared = story_tokens & instruction_tokens
-    if len(shared) < _MIN_SHARED_TERMS:
-        return False
-    ratio = len(shared) / len(instruction_tokens)
-    if ratio >= _OVERLAP_RATIO:
-        return True
-    if len(shared) >= _STRONG_SHARED:
-        return True
-    return False
-
-
-def _risk_score_for_violations(violated: list[dict[str, Any]]) -> float:
-    if not violated:
-        return 0.1
-    scores = []
-    for instr in violated:
-        level = instr.get("risk_level", "Medium")
-        scores.append(_RISK_ORDER.get(str(level), 0.5))
-    return min(1.0, max(scores))
+    risk_score: float = Field(..., ge=0.0, le=1.0)
 
 
 class NLPService:
     """
-    Prototype: loads `active-framework-response.json` (same shape as GET /frameworks/active)
-    and flags instructions whose description terms overlap the user story (internal heuristic).
+    Loads the active framework (`active-framework-response.json`, same shape as
+    GET /frameworks/active) and delegates risk scoring to OpenAI (ChatGPT).
+
+    The model decides its own scoring method; we only constrain the output shape
+    via Structured Outputs so `risk_score` is always a float in [0.0, 1.0].
     """
 
-    def _load_prototype_framework(self) -> tuple[dict[str, Any], str | None]:
-        path = _resolve_prototype_json_path()
+    def __init__(self) -> None:
+        self._model: str = os.environ.get("OPENAI_MODEL", _DEFAULT_OPENAI_MODEL)
+        self._client: Optional[AsyncOpenAI] = None
+
+    def _get_client(self) -> AsyncOpenAI:
+        """Lazy-initialized OpenAI client so app startup does not require the key."""
+        if self._client is None:
+            api_key: str = os.environ.get("OPENAI_API_KEY", "").strip()
+            if not api_key:
+                raise RuntimeError(
+                    "OPENAI_API_KEY is not set. Add it to brain/.env or the environment."
+                )
+            self._client = AsyncOpenAI(api_key=api_key)
+        return self._client
+
+    def _load_prototype_framework(self) -> tuple[dict[str, Any], Optional[str]]:
+        path: Path = _resolve_prototype_json_path()
         with open(path, encoding="utf-8") as f:
-            payload = json.load(f)
-        data = payload.get("data")
+            payload: Any = json.load(f)
+        data: Any = payload.get("data") if isinstance(payload, dict) else None
         if not isinstance(data, dict):
             raise ValueError("Invalid JSON: expected top-level 'data' object")
-        content = data.get("content")
+        content: Any = data.get("content")
         if not isinstance(content, dict):
             raise ValueError("Invalid JSON: expected data.content object")
-        raw_id = data.get("_id")
-        framework_id = str(raw_id) if raw_id is not None else None
+        raw_id: Any = data.get("_id")
+        framework_id: Optional[str] = str(raw_id) if raw_id is not None else None
         return content, framework_id
 
-    def analyze_story(self, text: str) -> UserStoryVerdict:
+    @staticmethod
+    def generate_audit_context(framework: dict[str, Any]) -> str:
+        """Flattens the hierarchical framework JSON into a text block for the LLM prompt."""
+        lines: list[str] = ["EXAMINE THE USER STORY AGAINST THESE SYNAPSE CONTROLS:"]
+        for cat in framework.get("categories", []):
+            for sub in cat.get("subcategories", []):
+                for instr in sub.get("instructions", []):
+                    iid: str = str(instr.get("id", "?"))
+                    desc: str = str(instr.get("description", ""))
+                    risk: str = str(instr.get("risk_level", "n/a"))
+                    lines.append(f"- [{iid}] {desc} (Risk: {risk})")
+        return "\n".join(lines)
+
+    def _build_system_prompt(self, framework_context: str) -> str:
+        return (
+            "You are Synapse, a governance risk analyzer.\n"
+            "Evaluate the provided user story against the governance framework below and "
+            "return a single numeric risk_score between 0.0 (no risk) and 1.0 (critical risk).\n"
+            "You may use any internal reasoning or scoring method you prefer; only the final "
+            "risk_score is returned.\n\n"
+            f"{framework_context}"
+        )
+
+    async def _score_with_openai(
+        self,
+        story_text: str,
+        framework_context: str,
+    ) -> float:
+        client: AsyncOpenAI = self._get_client()
+        completion = await client.beta.chat.completions.parse(
+            model=self._model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": self._build_system_prompt(framework_context),
+                },
+                {"role": "user", "content": f"USER STORY:\n{story_text}"},
+            ],
+            response_format=_RiskScoreSchema,
+        )
+        parsed: Optional[_RiskScoreSchema] = completion.choices[0].message.parsed
+        if parsed is None:
+            raise ValueError("OpenAI returned no parsed structured output.")
+        # Clamp defensively in case of edge-case float drift.
+        return max(0.0, min(1.0, float(parsed.risk_score)))
+
+    async def analyze_story(self, text: str) -> UserStoryVerdict:
         try:
             framework_content, framework_id = self._load_prototype_framework()
         except (OSError, ValueError, json.JSONDecodeError) as e:
@@ -118,68 +139,32 @@ class NLPService:
                 is_safe=False,
                 risk_score=1.0,
                 violated_controls=[],
-                remediation=f"Prototype could not load framework JSON: {e}",
+                remediation=f"Could not load framework JSON: {e}",
                 framework_id=None,
             )
 
-        story_words = re.findall(r"\b\w+\b", text.lower())
-        if len(story_words) < _MIN_STORY_WORDS:
+        framework_context: str = self.generate_audit_context(framework_content)
+
+        try:
+            risk_score: float = await self._score_with_openai(text, framework_context)
+        except Exception as e:
+            logger.exception("OpenAI risk scoring failed")
             return UserStoryVerdict(
-                is_safe=True,
-                risk_score=0.05,
+                is_safe=False,
+                risk_score=1.0,
                 violated_controls=[],
-                remediation="Story is too short for meaningful prototype overlap analysis.",
+                remediation=f"OpenAI risk scoring failed: {e}",
                 framework_id=framework_id,
             )
 
-        story_tokens = _significant_tokens(text)
-        violated: list[dict[str, Any]] = []
-
-        for instr in _iter_instructions(framework_content):
-            inst_tokens = _significant_tokens(instr.get("description", ""))
-            if _violation_overlap(story_tokens, inst_tokens):
-                violated.append(instr)
-
-        violated.sort(key=lambda i: (_RISK_ORDER.get(str(i.get("risk_level", "")), 0), i.get("id", "")))
-        ids = [str(i["id"]) for i in violated if i.get("id")]
-
-        if not violated:
-            return UserStoryVerdict(
-                is_safe=True,
-                risk_score=0.1,
-                violated_controls=[],
-                remediation="No instruction overlap detected (prototype term-overlap model).",
-                framework_id=framework_id,
-            )
-
-        risk = _risk_score_for_violations(violated)
-        ids_preview = ", ".join(ids[:12])
-        if len(ids) > 12:
-            ids_preview += f", … (+{len(ids) - 12} more)"
-
+        is_safe: bool = risk_score < _RISK_UNSAFE_THRESHOLD
         return UserStoryVerdict(
-            is_safe=False,
-            risk_score=risk,
-            violated_controls=ids,
+            is_safe=is_safe,
+            risk_score=risk_score,
+            violated_controls=[],
             remediation=(
-                f"Prototype analysis: user story overlaps {len(ids)} instruction(s) by shared terms — "
-                f"review recommended. Matched IDs: {ids_preview}"
+                "Risk score computed by OpenAI against the active framework. "
+                f"is_safe is derived from risk_score < {_RISK_UNSAFE_THRESHOLD}."
             ),
             framework_id=framework_id,
         )
-        
-
-    @staticmethod
-    def generate_audit_context(framework: dict[str, Any]) -> str:
-        """Flattens the hierarchical JSON into a string context for a future LLM."""
-        lines = ["EXAMINE THE USER STORY AGAINST THESE SYNAPSE CONTROLS:"]
-
-        for cat in framework.get("categories", []):
-            for sub in cat.get("subcategories", []):
-                for instr in sub.get("instructions", []):
-                    iid = instr.get("id", "?")
-                    desc = instr.get("description", "")
-                    risk = instr.get("risk_level", "n/a")
-                    lines.append(f"- [{iid}] {desc} (Risk: {risk})")
-
-        return "\n".join(lines)

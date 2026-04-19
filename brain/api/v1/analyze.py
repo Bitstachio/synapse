@@ -14,7 +14,7 @@ nlp_service = NLPService()
 async def analyze_user_story(
     payload: UserStoryRequest,
 ) -> StandardResponse[AnalyzeStoryResult]:
-    verdict = nlp_service.analyze_story(payload.story_text)
+    verdict = await nlp_service.analyze_story(payload.story_text)
 
     return StandardResponse[AnalyzeStoryResult](
         success=True,
