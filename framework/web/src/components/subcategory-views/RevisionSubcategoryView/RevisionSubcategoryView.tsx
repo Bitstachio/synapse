@@ -25,11 +25,13 @@ type RevisionSubcategoryViewProps = (AddProps | DeleteProps | UpdateProps) & { c
 
 const RevisionSubcategoryView = (props: RevisionSubcategoryViewProps) =>
   props.op === "added" ? (
-    <AddedFrameworkNode content={<SubcategoryContentView id={props.subcategory.id} name={props.subcategory.name} />}>
+    <AddedFrameworkNode content={<SubcategoryContentView id={props.subcategory.id} name={props.subcategory.name} />}
+    >
       {props.children}
     </AddedFrameworkNode>
   ) : props.op === "deleted" ? (
-    <DeletedFrameworkNode content={<SubcategoryContentView id={props.subcategory.id} name={props.subcategory.name} />}>
+    <DeletedFrameworkNode content={<SubcategoryContentView id={props.subcategory.id} name={props.subcategory.name} />}
+    >
       {props.children}
     </DeletedFrameworkNode>
   ) : props.op === "updated" ? (

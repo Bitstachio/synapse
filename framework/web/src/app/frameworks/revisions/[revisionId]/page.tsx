@@ -1,6 +1,6 @@
 "use client";
 
-import ChangeCardLegacy from "@/components/ChangeCard/ChangeCardLegacy";
+import { FrameworkRevisionChangeList } from "@/components/FrameworkTree/FrameworkRevisionChangeList";
 import { FrameworkRevisionTree } from "@/components/FrameworkTree/FrameworkRevisionTree";
 import { ReturnToTop } from "@/components/ReturnToTop/ReturnToTop";
 import { getRevisionById, type RevisionDetail, type RevisionDiffOp } from "@/lib/frameworks-api";
@@ -40,7 +40,6 @@ export default function RevisionDiffPage() {
 
   const revision: RevisionDetail | undefined = data?.data;
   const hasDiff = revision?.diff && getDisplayableDiff(revision.diff).length > 0;
-  const contentForLabel = revision?.newContent ?? revision?.previousContent;
   const [viewMode, setViewMode] = useState<"list" | "context">("list");
 
   if (!revisionId) {
@@ -175,21 +174,7 @@ export default function RevisionDiffPage() {
             </div>
 
             {viewMode === "list" ? (
-              <ul className="space-y-4">
-                {displayableOps.map((op, idx) => (
-                  <li
-                    key={`${op.path}-${idx}`}
-                    className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900/30"
-                  >
-                    <ChangeCardLegacy
-                      revision={revision}
-                      op={op}
-                      contentForLabel={contentForLabel}
-                      showLocationLabel={true}
-                    />
-                  </li>
-                ))}
-              </ul>
+              <FrameworkRevisionChangeList revision={revision} displayableOps={displayableOps} />
             ) : (
               <FrameworkRevisionTree revision={revision} displayableOps={displayableOps} />
             )}

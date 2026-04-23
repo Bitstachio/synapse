@@ -3,9 +3,10 @@ import { ReactNode } from "react";
 type ChangeCardProps = {
   before: ReactNode;
   after: ReactNode;
+  children?: ReactNode;
 };
 
-const ChangeCard = ({ before, after }: ChangeCardProps) => {
+const ChangeCard = ({ before, after, children }: ChangeCardProps) => {
   return (
     <div className="mt-1 space-y-1 text-sm">
       <span className="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Before</span>
@@ -18,6 +19,7 @@ const ChangeCard = ({ before, after }: ChangeCardProps) => {
           {after}
         </div>
       </div>
+      {children}
     </div>
   );
 };
