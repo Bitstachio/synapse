@@ -37,16 +37,11 @@ type AuthProviderProps = {
 };
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [state, setState] = useState<AuthState>({
-    token: null,
-    isReady: false,
-  });
+  const [state, setState] = useState<AuthState>(() => ({
+    token: getStoredToken(),
+    isReady: true,
+  }));
   const router = useRouter();
-
-  useEffect(() => {
-    const token = getStoredToken();
-    setState({ token, isReady: true });
-  }, []);
 
   useEffect(() => {
     const handleLogout = () => setState((s) => ({ ...s, token: null }));

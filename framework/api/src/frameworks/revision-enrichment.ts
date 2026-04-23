@@ -14,11 +14,7 @@ export type SemanticDiffOp =
 
 const DIFFABLE_SCALARS = ["name", "description", "risk_level"] as const;
 
-function diffScalars(
-  prev: Record<string, unknown>,
-  next: Record<string, unknown>,
-  basePath: string,
-): SemanticDiffOp[] {
+function diffScalars(prev: Record<string, unknown>, next: Record<string, unknown>, basePath: string): SemanticDiffOp[] {
   const ops: SemanticDiffOp[] = [];
   for (const key of DIFFABLE_SCALARS) {
     const prevVal = prev[key];
@@ -37,12 +33,8 @@ function diffByIds(
   onModified: (prev: Record<string, unknown>, next: Record<string, unknown>, path: string) => SemanticDiffOp[],
 ): SemanticDiffOp[] {
   const ops: SemanticDiffOp[] = [];
-  const prevById = new Map(
-    prevItems.filter((i) => typeof i.id === "string").map((i) => [i.id as string, i]),
-  );
-  const nextById = new Map(
-    nextItems.filter((i) => typeof i.id === "string").map((i) => [i.id as string, i]),
-  );
+  const prevById = new Map(prevItems.filter((i) => typeof i.id === "string").map((i) => [i.id as string, i]));
+  const nextById = new Map(nextItems.filter((i) => typeof i.id === "string").map((i) => [i.id as string, i]));
 
   for (const [id, item] of prevById) {
     if (!nextById.has(id)) ops.push({ op: "remove", path: `${basePath}/${id}`, value: item });
@@ -67,21 +59,13 @@ export function computeSemanticDiff(
   previous: Record<string, unknown>,
   next: Record<string, unknown>,
 ): SemanticDiffOp[] | null {
-  const prevCats = Array.isArray(previous.categories)
-    ? (previous.categories as Record<string, unknown>[])
-    : [];
-  const nextCats = Array.isArray(next.categories)
-    ? (next.categories as Record<string, unknown>[])
-    : [];
+  const prevCats = Array.isArray(previous.categories) ? (previous.categories as Record<string, unknown>[]) : [];
+  const nextCats = Array.isArray(next.categories) ? (next.categories as Record<string, unknown>[]) : [];
 
   const ops = diffByIds(prevCats, nextCats, "/categories", (prevCat, nextCat, catPath) => {
     const catOps = diffScalars(prevCat, nextCat, catPath);
-    const prevSubs = Array.isArray(prevCat.subcategories)
-      ? (prevCat.subcategories as Record<string, unknown>[])
-      : [];
-    const nextSubs = Array.isArray(nextCat.subcategories)
-      ? (nextCat.subcategories as Record<string, unknown>[])
-      : [];
+    const prevSubs = Array.isArray(prevCat.subcategories) ? (prevCat.subcategories as Record<string, unknown>[]) : [];
+    const nextSubs = Array.isArray(nextCat.subcategories) ? (nextCat.subcategories as Record<string, unknown>[]) : [];
     catOps.push(
       ...diffByIds(prevSubs, nextSubs, `${catPath}/subcategories`, (prevSub, nextSub, subPath) => {
         const subOps = diffScalars(prevSub, nextSub, subPath);
@@ -134,7 +118,8 @@ export function normalizeContentToNewShape(
       : [];
     return { ...fn, subcategories };
   });
-  const { functions: _f, ...rest } = content;
+  const rest = { ...content };
+  delete rest.functions;
   return { ...rest, categories };
 }
 
@@ -162,17 +147,13 @@ export function findItemByIdInContent(content: ContentTree | null, id: string): 
 }
 
 /** Copy name and description from current item onto item when ids match. */
-function enrichItemWithCurrent(
-  item: Record<string, unknown>,
-  currentContent: ContentTree | null,
-): void {
+function enrichItemWithCurrent(item: Record<string, unknown>, currentContent: ContentTree | null): void {
   const id = item.id;
   if (id == null || typeof id !== "string") return;
   const current = findItemByIdInContent(currentContent, id);
   if (!current) return;
   if ("name" in current && current.name !== undefined) item.name = current.name;
-  if ("description" in current && current.description !== undefined)
-    item.description = current.description;
+  if ("description" in current && current.description !== undefined) item.description = current.description;
 }
 
 /** Enrich newContent.categories and nested subcategories/instructions. */

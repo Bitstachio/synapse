@@ -21,7 +21,7 @@ export class AuthController {
     description:
       "Acknowledges logout. The client should clear the stored access token after calling this. The token remains valid until it expires unless revoked elsewhere.",
   })
-  async logout(): Promise<{ ok: true }> {
+  logout(): { ok: true } {
     return { ok: true };
   }
 }

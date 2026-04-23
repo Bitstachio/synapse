@@ -6,7 +6,7 @@ import InstructionContentView from "@/components/instruction-views/InstructionCo
 import RevisionSubcategoryView from "@/components/subcategory-views/RevisionSubcategoryView/RevisionSubcategoryView";
 import SubcategoryContentView from "@/components/subcategory-views/SubcategoryContentView/SubcategoryContentView";
 import type { RevisionDetail, RevisionDiffOp } from "@/lib/frameworks-api";
-import type { Category, Instruction, Subcategory } from "@/types/framework";
+import type { Category, Subcategory } from "@/types/framework";
 import { alignById, groupOpsByItemPath, instructionRevisionState } from "./FrameworkRevisionTree.shared";
 
 type FrameworkRevisionTreeProps = {

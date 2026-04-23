@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { User } from "../auth/decorators/user.decorator";
 import type { RequestUser } from "../auth/decorators/user.decorator";
@@ -35,18 +25,14 @@ export class FrameworksController {
   @ApiOperation({ summary: "Create a new wellbeing framework" })
   @PermissionsDecorator(PermissionsConstants.CREATE_FRAMEWORKS)
   @ApiBody({ type: CreateFrameworkDto })
-  async create(
-    @Body() createFrameworkDto: CreateFrameworkDto,
-    @User() user: RequestUser,
-  ) {
+  async create(@Body() createFrameworkDto: CreateFrameworkDto, @User() user: RequestUser) {
     return this.frameworksService.create(createFrameworkDto, user);
   }
 
   @Get()
   @ApiOperation({
     summary: "List all frameworks",
-    description:
-      "Each item includes `createdAt` and `updatedAt` (last modified) for the framework record.",
+    description: "Each item includes `createdAt` and `updatedAt` (last modified) for the framework record.",
   })
   @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
   async findAll() {
@@ -56,8 +42,7 @@ export class FrameworksController {
   @Get("active")
   @ApiOperation({
     summary: "Get the currently active framework used for auditing",
-    description:
-      "Includes `createdAt` and `updatedAt` on the framework record.",
+    description: "Includes `createdAt` and `updatedAt` on the framework record.",
   })
   @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
   async findActive() {
@@ -109,8 +94,7 @@ export class FrameworksController {
   @Get(":id")
   @ApiOperation({
     summary: "Get a framework by ID",
-    description:
-      "Includes `createdAt` and `updatedAt` for the framework document.",
+    description: "Includes `createdAt` and `updatedAt` for the framework document.",
   })
   @PermissionsDecorator(PermissionsConstants.READ_FRAMEWORKS)
   async findOne(@Param("id") id: string) {
@@ -126,11 +110,7 @@ export class FrameworksController {
   })
   @PermissionsDecorator(PermissionsConstants.UPDATE_FRAMEWORKS)
   @ApiBody({ type: UpdateFrameworkDto })
-  async update(
-    @Param("id") id: string,
-    @Body() updateFrameworkDto: UpdateFrameworkDto,
-    @User() user: RequestUser,
-  ) {
+  async update(@Param("id") id: string, @Body() updateFrameworkDto: UpdateFrameworkDto, @User() user: RequestUser) {
     return this.frameworksService.update(id, updateFrameworkDto, user);
   }
 

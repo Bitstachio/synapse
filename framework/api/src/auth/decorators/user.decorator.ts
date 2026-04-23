@@ -6,6 +6,6 @@ export interface RequestUser {
 }
 
 export const User = createParamDecorator((data: unknown, ctx: ExecutionContext): RequestUser => {
-  const request = ctx.switchToHttp().getRequest();
+  const request = ctx.switchToHttp().getRequest<{ user: RequestUser }>();
   return request.user;
 });

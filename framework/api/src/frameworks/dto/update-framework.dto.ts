@@ -18,4 +18,3 @@ export class UpdateFrameworkDto extends PartialType(CreateFrameworkDto) {
   @IsISO8601()
   lastKnownUpdatedAt?: string;
 }
-

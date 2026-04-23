@@ -115,13 +115,7 @@ export default function FrameworkRevisionsPage() {
     [frameworkOptions, frameworkId],
   );
 
-  useEffect(() => {
-    if (selectedFramework && !frameworkComboboxOpen) {
-      setFrameworkComboboxInput(selectedFramework.label);
-    } else if (!frameworkId && !frameworkComboboxOpen) {
-      setFrameworkComboboxInput("");
-    }
-  }, [frameworkId, selectedFramework, frameworkComboboxOpen]);
+  const frameworkComboboxValue = frameworkComboboxOpen ? frameworkComboboxInput : (selectedFramework?.label ?? "");
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -198,12 +192,15 @@ export default function FrameworkRevisionsPage() {
                 <input
                   id="filter-framework"
                   type="text"
-                  value={frameworkComboboxInput}
+                  value={frameworkComboboxValue}
                   onChange={(e) => {
                     setFrameworkComboboxInput(e.target.value);
                     setFrameworkComboboxOpen(true);
                   }}
-                  onFocus={() => setFrameworkComboboxOpen(true)}
+                  onFocus={() => {
+                    setFrameworkComboboxInput(selectedFramework?.label ?? "");
+                    setFrameworkComboboxOpen(true);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Escape") {
                       setFrameworkComboboxOpen(false);
@@ -233,6 +230,7 @@ export default function FrameworkRevisionsPage() {
                     <button
                       type="button"
                       role="option"
+                      aria-selected={!frameworkId}
                       onClick={() => handleSelectFramework(null)}
                       className="w-full px-3 py-2 text-left text-sm text-zinc-600 hover:bg-zinc-50 dark:text-zinc-400 dark:hover:bg-zinc-700"
                     >
@@ -247,6 +245,7 @@ export default function FrameworkRevisionsPage() {
                         <button
                           type="button"
                           role="option"
+                          aria-selected={frameworkId === opt.id}
                           onClick={() => handleSelectFramework(opt)}
                           className={`w-full px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 ${
                             frameworkId === opt.id

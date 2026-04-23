@@ -35,10 +35,7 @@ export class FrameworksService {
     });
   }
 
-  async create(
-    createFrameworkDto: CreateFrameworkDto,
-    user?: RequestUser,
-  ): Promise<Framework> {
+  async create(createFrameworkDto: CreateFrameworkDto, user?: RequestUser): Promise<Framework> {
     try {
       const newFramework = new this.frameworkModel(createFrameworkDto);
       const saved = await newFramework.save();
@@ -50,18 +47,20 @@ export class FrameworksService {
       return saved;
     } catch (error) {
       // Handle MongoDB unique constraint error (e.g., duplicate version)
-      if (error.code === 11000)
+      if (this.isMongoDuplicateKeyError(error))
         throw new ConflictException(`Framework version ${createFrameworkDto.version} already exists`);
 
       throw error;
     }
   }
 
-  async update(
-    id: string,
-    updateFrameworkDto: UpdateFrameworkDto,
-    user?: RequestUser,
-  ): Promise<Framework> {
+  private isMongoDuplicateKeyError(error: unknown): error is { code: 11000 } {
+    if (typeof error !== "object" || error === null) return false;
+    const withCode = error as { code?: unknown };
+    return withCode.code === 11000;
+  }
+
+  async update(id: string, updateFrameworkDto: UpdateFrameworkDto, user?: RequestUser): Promise<Framework> {
     const { lastKnownUpdatedAt, ...updatePayload } = updateFrameworkDto as UpdateFrameworkDto & {
       lastKnownUpdatedAt?: string;
     };
@@ -78,23 +77,15 @@ export class FrameworksService {
 
     if (lastKnownUpdatedAt) {
       updated = await this.frameworkModel
-        .findOneAndUpdate(
-          { _id: id, updatedAt: new Date(lastKnownUpdatedAt) },
-          updatePayload,
-          queryOptions,
-        )
+        .findOneAndUpdate({ _id: id, updatedAt: new Date(lastKnownUpdatedAt) }, updatePayload, queryOptions)
         .exec();
       if (!updated) {
         const current = await this.frameworkModel.findById(id).exec();
         if (!current) throw new NotFoundException("Framework not found");
-        throw new ConflictException(
-          "The framework was modified by another user. Please refresh and submit again.",
-        );
+        throw new ConflictException("The framework was modified by another user. Please refresh and submit again.");
       }
     } else {
-      updated = await this.frameworkModel
-        .findByIdAndUpdate(id, updatePayload, queryOptions)
-        .exec();
+      updated = await this.frameworkModel.findByIdAndUpdate(id, updatePayload, queryOptions).exec();
       if (!updated) throw new NotFoundException("Framework not found");
     }
 

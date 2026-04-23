@@ -41,19 +41,13 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
   const activeQuery = useActiveFramework({ enabled: isAuthenticated && !editById });
   const byIdQuery = useFrameworkById(editById, { enabled: isAuthenticated && !!editById });
   const { data, isLoading, error } = editById ? byIdQuery : activeQuery;
-  const [framework, setFramework] = useState<Framework | null>(null);
-  const [frameworkId, setFrameworkId] = useState<string | null>(null);
+  const [frameworkDraft, setFrameworkDraft] = useState<Framework | null>(null);
+  const frameworkId = data?.id ?? null;
+  const framework = frameworkDraft && frameworkDraft._id === data?.framework?._id ? frameworkDraft : (data?.framework ?? null);
   const [editing, setEditing] = useState<EditingTarget | null>(null);
   const [pendingDelete, setPendingDelete] = useState<EditingTarget | null>(null);
   const [conflictMessage, setConflictMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (data) {
-      setFramework(data.framework);
-      setFrameworkId(data.id);
-    }
-  }, [data]);
 
   const normalizedFocusId = focusItemId?.trim() || null;
   const isFocusTarget = useCallback(
@@ -98,6 +92,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       return createFrameworkVersion(payload);
     },
     onSuccess: () => {
+      setFrameworkDraft(null);
       queryClient.invalidateQueries({ queryKey: ACTIVE_FRAMEWORK_QUERY_KEY });
       if (editById) {
         queryClient.invalidateQueries({ queryKey: frameworkByIdQueryKey(editById) });
@@ -109,6 +104,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
         setConflictMessage(
           "The framework was modified by someone else. It has been refreshed; please review and submit your changes again.",
         );
+        setFrameworkDraft(null);
         const queryKey = editById ? frameworkByIdQueryKey(editById) : ACTIVE_FRAMEWORK_QUERY_KEY;
         queryClient.refetchQueries({ queryKey });
       }
@@ -122,11 +118,11 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       const cat = next.content.categories[categoryIndex];
       if (!cat) return;
       next.content.categories[categoryIndex] = { ...cat, ...payload };
-      setFramework(next);
+      setFrameworkDraft(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
-    [framework],
+    [framework, frameworkId, saveMutation],
   );
 
   const deleteCategory = useCallback(
@@ -134,11 +130,11 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       if (!framework) return;
       const next = shallowCloneFramework(framework);
       next.content.categories.splice(categoryIndex, 1);
-      setFramework(next);
+      setFrameworkDraft(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
-    [framework],
+    [framework, frameworkId, saveMutation],
   );
 
   const addCategory = useCallback(() => {
@@ -154,7 +150,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       subcategories: [],
     };
     next.content.categories.push(newCategory);
-    setFramework(next);
+    setFrameworkDraft(next);
     setEditing({ type: "category", categoryIndex: next.content.categories.length - 1, isNew: true });
   }, [framework]);
 
@@ -173,7 +169,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
         instructions: [],
       };
       cat.subcategories.push(newSubcategory);
-      setFramework(next);
+      setFrameworkDraft(next);
       setEditing({
         type: "subcategory",
         categoryIndex,
@@ -194,11 +190,11 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
         ...sub,
         ...payload,
       };
-      setFramework(next);
+      setFrameworkDraft(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
-    [framework],
+    [framework, frameworkId, saveMutation],
   );
 
   const deleteSubcategory = useCallback(
@@ -206,11 +202,11 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       if (!framework) return;
       const next = shallowCloneFramework(framework);
       next.content.categories[categoryIndex].subcategories.splice(subcategoryIndex, 1);
-      setFramework(next);
+      setFrameworkDraft(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
-    [framework],
+    [framework, frameworkId, saveMutation],
   );
 
   const addInstruction = useCallback(
@@ -228,7 +224,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
         risk_level: "Medium",
       };
       sub.instructions.push(newInstruction);
-      setFramework(next);
+      setFrameworkDraft(next);
       setEditing({
         type: "instruction",
         categoryIndex,
@@ -251,11 +247,11 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
         ...inst,
         ...payload,
       };
-      setFramework(next);
+      setFrameworkDraft(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
-    [framework],
+    [framework, frameworkId, saveMutation],
   );
 
   const deleteInstruction = useCallback(
@@ -263,11 +259,11 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       if (!framework) return;
       const next = shallowCloneFramework(framework);
       next.content.categories[categoryIndex].subcategories[subcategoryIndex].instructions.splice(instructionIndex, 1);
-      setFramework(next);
+      setFrameworkDraft(next);
       saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
       setEditing(null);
     },
-    [framework],
+    [framework, frameworkId, saveMutation],
   );
 
   const getPendingDeleteLabel = useCallback((): string => {
@@ -310,22 +306,22 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       if (editing.type === "category") {
         const next = shallowCloneFramework(framework);
         next.content.categories.splice(editing.categoryIndex, 1);
-        setFramework(next);
+        setFrameworkDraft(next);
       } else if (editing.type === "subcategory") {
         const next = shallowCloneFramework(framework);
         next.content.categories[editing.categoryIndex].subcategories.splice(editing.subcategoryIndex, 1);
-        setFramework(next);
+        setFrameworkDraft(next);
       } else {
         const next = shallowCloneFramework(framework);
         next.content.categories[editing.categoryIndex].subcategories[editing.subcategoryIndex].instructions.splice(
           editing.instructionIndex,
           1,
         );
-        setFramework(next);
+        setFrameworkDraft(next);
       }
     }
     setEditing(null);
-  }, [editing, framework, frameworkId]);
+  }, [editing, framework]);
 
   if (isLoading || !framework) {
     return (

@@ -5,10 +5,7 @@ import { FrameworkRevisionsService } from "./framework-revisions.service";
 import { FrameworksController } from "./frameworks.controller";
 import { FrameworksService } from "./frameworks.service";
 import { Framework, FrameworkSchema } from "./schemas/framework.schema";
-import {
-  FrameworkRevision,
-  FrameworkRevisionSchema,
-} from "./schemas/framework-revision.schema";
+import { FrameworkRevision, FrameworkRevisionSchema } from "./schemas/framework-revision.schema";
 
 @Module({
   imports: [

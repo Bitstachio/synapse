@@ -7,5 +7,4 @@ export const PERMISSIONS_KEY = "permissions";
  * Use with JwtAuthGuard + PermissionsGuard.
  * Example: @Permissions('read:frameworks')
  */
-export const Permissions = (...permissions: string[]) =>
-  SetMetadata(PERMISSIONS_KEY, permissions);
+export const Permissions = (...permissions: string[]) => SetMetadata(PERMISSIONS_KEY, permissions);

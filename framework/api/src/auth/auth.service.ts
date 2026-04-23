@@ -25,8 +25,7 @@ export class AuthService {
 
     const issuerBase = domain.replace(/^https?:\/\//, "");
     const url = `https://${issuerBase}/oauth/token`;
-    const connection =
-      this.configService.get<string>("AUTH0_CONNECTION") ?? "Username-Password-Authentication";
+    const connection = this.configService.get<string>("AUTH0_CONNECTION") ?? "Username-Password-Authentication";
 
     const body = new URLSearchParams({
       grant_type: "password",
@@ -47,8 +46,7 @@ export class AuthService {
     const data = (await response.json()) as Auth0TokenResponse & { error?: string; error_description?: string };
 
     if (!response.ok) {
-      const message =
-        data.error_description ?? data.error ?? "Invalid email or password";
+      const message = data.error_description ?? data.error ?? "Invalid email or password";
       throw new UnauthorizedException(message);
     }
 

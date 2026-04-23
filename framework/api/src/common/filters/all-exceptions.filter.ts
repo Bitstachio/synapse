@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from "@nestjs/common";
 import { HttpAdapterHost } from "@nestjs/core";
+import type { Request } from "express";
 
 export type ErrorResponse = {
   message?: string;
@@ -31,12 +32,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
     } else if (exception instanceof Error) {
       this.logger.error(`Unhandled exception: ${exception.message}`, exception.stack);
     }
+    const path = String(httpAdapter.getRequestUrl(ctx.getRequest<Request>()));
 
     const responseBody: ErrorResponse = {
       ...(message && { message }),
       meta: {
         timestamp: new Date().toISOString(),
-        path: httpAdapter.getRequestUrl(ctx.getRequest()),
+        path,
       },
     };
 

@@ -98,18 +98,17 @@ export class FrameworkRevisionsService {
     const cloned = JSON.parse(JSON.stringify(revision)) as FrameworkRevision & {
       _enrichedWithCurrentNames?: boolean;
     };
-    if (
-      cloned.newContent &&
-      typeof cloned.newContent === "object" &&
-      cloned.newContent !== null
-    ) {
-      const normalized = normalizeContentToNewShape(cloned.newContent as Record<string, unknown>);
+    if (cloned.newContent && typeof cloned.newContent === "object" && cloned.newContent !== null) {
+      const normalized = normalizeContentToNewShape(cloned.newContent);
       if (normalized) cloned.newContent = normalized;
     }
 
     if (currentContent) {
       enrichNewContentWithCurrent(cloned.newContent, currentContent);
-      enrichDiffValuesWithCurrent(cloned.diff as { op: string; path: string; value?: unknown }[] | undefined, currentContent);
+      enrichDiffValuesWithCurrent(
+        cloned.diff as { op: string; path: string; value?: unknown }[] | undefined,
+        currentContent,
+      );
       cloned._enrichedWithCurrentNames = true;
     }
 
