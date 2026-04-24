@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ApiProperty } from "@nestjs/swagger";
 import { Document } from "mongoose";
 
-@Schema({ timestamps: true })
+@Schema({ timestamps: true, collection: "frameworks" })
 export class Framework extends Document {
   @Prop({ required: true })
   name: string;

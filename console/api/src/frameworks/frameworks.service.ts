@@ -60,6 +60,48 @@ export class FrameworksService {
     return withCode.code === 11000;
   }
 
+  private isObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+  }
+
+  private isFrameworkLike(value: unknown): value is Record<string, unknown> {
+    if (!this.isObject(value)) return false;
+    return (
+      typeof value._id === "string" &&
+      typeof value.name === "string" &&
+      typeof value.version === "string" &&
+      typeof value.isActive === "boolean" &&
+      this.isObject(value.content)
+    );
+  }
+
+  /**
+   * Supports both shapes currently found in Mongo:
+   * 1) direct framework docs
+   * 2) wrapper docs: { data: [framework...], meta: {...} }
+   */
+  private extractFrameworksFromDoc(doc: unknown): Record<string, unknown>[] {
+    if (!this.isObject(doc)) return [];
+
+    if (this.isFrameworkLike(doc)) {
+      return [doc];
+    }
+
+    const wrapped: unknown = (doc as { data?: unknown }).data;
+    if (!Array.isArray(wrapped)) return [];
+
+    return wrapped.filter((item): item is Record<string, unknown> => this.isFrameworkLike(item));
+  }
+
+  private normalizeFrameworkLike(doc: Record<string, unknown>): Record<string, unknown> {
+    const normalized: Record<string, unknown> = { ...doc };
+    if (this.isObject(normalized.content)) {
+      const next = normalizeContentToNewShape(normalized.content);
+      if (next) normalized.content = next;
+    }
+    return normalized;
+  }
+
   async update(id: string, updateFrameworkDto: UpdateFrameworkDto, user?: RequestUser): Promise<Framework> {
     const { lastKnownUpdatedAt, ...updatePayload } = updateFrameworkDto as UpdateFrameworkDto & {
       lastKnownUpdatedAt?: string;
@@ -99,34 +141,22 @@ export class FrameworksService {
     return updated;
   }
 
-  async findAll(): Promise<Framework[]> {
-    const list = await this.frameworkModel.find().sort({ createdAt: -1 }).exec();
-    for (const doc of list) {
-      if (doc.content) {
-        const normalized = normalizeContentToNewShape(doc.content as Record<string, unknown>);
-        if (normalized) doc.content = normalized;
-      }
-    }
-    return list;
+  async findAll(): Promise<Record<string, unknown>[]> {
+    const rawDocs = (await this.frameworkModel.find().sort({ createdAt: -1 }).lean().exec()) as unknown[];
+    return rawDocs.flatMap((doc) => this.extractFrameworksFromDoc(doc).map((f) => this.normalizeFrameworkLike(f)));
   }
 
-  async findActive(): Promise<Framework> {
-    const active = await this.frameworkModel.findOne({ isActive: true }).exec();
+  async findActive(): Promise<Record<string, unknown>> {
+    const list = await this.findAll();
+    const active = list.find((doc) => doc.isActive === true);
     if (!active) throw new NotFoundException("No active framework found");
-    if (active.content) {
-      const normalized = normalizeContentToNewShape(active.content as Record<string, unknown>);
-      if (normalized) active.content = normalized;
-    }
     return active;
   }
 
-  async findOne(id: string): Promise<Framework> {
-    const framework = await this.frameworkModel.findById(id).exec();
+  async findOne(id: string): Promise<Record<string, unknown>> {
+    const list = await this.findAll();
+    const framework = list.find((doc) => String(doc._id) === id);
     if (!framework) throw new NotFoundException("Framework not found");
-    if (framework.content) {
-      const normalized = normalizeContentToNewShape(framework.content as Record<string, unknown>);
-      if (normalized) framework.content = normalized;
-    }
     return framework;
   }
 
