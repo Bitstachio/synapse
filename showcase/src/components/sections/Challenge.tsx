@@ -40,7 +40,7 @@ export default function Challenge() {
             <span className="gradient-text">The human layer is exposed.</span>
           </h2>
           <p className="text-base sm:text-lg text-slate-400 leading-relaxed">
-            The rapid integration of AI into workplaces — especially in regulated industries like banking — creates
+            The rapid integration of AI into workplaces - especially in regulated industries like banking - creates
             a fundamental tension. While AI promises efficiency and innovation, its adoption also introduces
             serious threats to employee well-being, privacy, and security.
           </p>
@@ -57,9 +57,9 @@ export default function Challenge() {
           <div className="absolute -left-1 top-4 w-2 h-2 rounded-full bg-blue-500" />
           <p className="text-lg sm:text-xl md:text-2xl font-medium text-slate-200 leading-relaxed italic">
             "Employees often lack the clarity, confidence, and trust they need to use AI tools
-            responsibly every day — creating inefficiency and institutional risk, not just missed opportunity."
+            responsibly every day - creating inefficiency and institutional risk, not just missed opportunity."
           </p>
-          <cite className="mt-3 block text-sm text-slate-500 not-italic">— TD Bank engagement finding</cite>
+          <cite className="mt-3 block text-sm text-slate-500 not-italic">TD Bank engagement finding</cite>
         </motion.blockquote>
 
         {/* Two-column context */}
@@ -74,7 +74,7 @@ export default function Challenge() {
             <h3 className="text-base sm:text-lg font-semibold text-white mb-3">The Micro-Alignment Gap</h3>
             <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
               Most AI safety frameworks focus on macro-level concerns: data privacy and algorithmic bias.
-              But there is a critical gap at the individual level — how AI directly touches each employee's
+              But there is a critical gap at the individual level - how AI directly touches each employee's
               autonomy, psychological safety, and day-to-day decision-making.
             </p>
           </div>
@@ -82,7 +82,7 @@ export default function Challenge() {
             <h3 className="text-base sm:text-lg font-semibold text-white mb-3">TD Bank's Position</h3>
             <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
               TD Bank prioritizes a human-centric culture and cannot afford to compromise it with AI
-              adoption — yet in a fast-moving world, standing still means falling behind. They engaged
+              adoption - yet in a fast-moving world, standing still means falling behind. They engaged
               our team to find a path forward that protects people without blocking progress.
             </p>
           </div>

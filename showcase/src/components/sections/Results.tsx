@@ -40,7 +40,7 @@ const sdgs = [
   {
     num: '8',
     title: 'Decent Work & Economic Growth',
-    desc: 'The framework must be created and maintained by humans, giving departments like HR the ability to define ethical protections — allowing AI and employees to work side by side.',
+    desc: 'The framework must be created and maintained by humans, giving departments like HR the ability to define ethical protections - allowing AI and employees to work side by side.',
     color: 'text-amber-400',
     bg: 'bg-amber-500/10',
     border: 'border-amber-500/20',

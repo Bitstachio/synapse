@@ -4,12 +4,12 @@ const objectives = [
   {
     num: '01',
     title: 'Map the Micro-Alignment Gap',
-    body: 'Identify and characterize the gap in current AI safety frameworks as it pertains to individual employee well-being, privacy, and security — not just organizational compliance.',
+    body: 'Identify and characterize the gap in current AI safety frameworks as it pertains to individual employee well-being, privacy, and security - not just organizational compliance.',
   },
   {
     num: '02',
     title: 'Build Ethics-First Governance',
-    body: 'Develop a framework that integrates ethical psychological safety and human autonomy as core AI safety features — not afterthoughts to corporate policy.',
+    body: 'Develop a framework that integrates ethical psychological safety and human autonomy as core AI safety features - not afterthoughts to corporate policy.',
   },
   {
     num: '03',
@@ -19,7 +19,7 @@ const objectives = [
   {
     num: '04',
     title: 'Human-in-Command by Design',
-    body: 'Create a human-in-command solution that uses AI to ensure ethical guidelines are followed — maintaining employee well-being, not replacing human judgment.',
+    body: 'Create a human-in-command solution that uses AI to ensure ethical guidelines are followed - maintaining employee well-being, not replacing human judgment.',
   },
 ];
 

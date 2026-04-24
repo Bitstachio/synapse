@@ -11,7 +11,6 @@ import Principles from '@/components/sections/Principles';
 import Results from '@/components/sections/Results';
 import Collaboration from '@/components/sections/Collaboration';
 import Conclusion from '@/components/sections/Conclusion';
-import Team from '@/components/sections/Team';
 import SiteFooter from '@/components/sections/SiteFooter';
 
 export default function App() {
@@ -31,7 +30,6 @@ export default function App() {
         <Results />
         <Collaboration />
         <Conclusion />
-        <Team />
       </main>
       <SiteFooter />
     </div>
