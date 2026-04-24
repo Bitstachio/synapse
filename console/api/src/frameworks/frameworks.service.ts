@@ -1,6 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { CreateFrameworkDto } from "./dto/create-framework.dto";
 import { UpdateFrameworkDto } from "./dto/update-framework.dto";
 import { FrameworkRevisionsService } from "./framework-revisions.service";
@@ -67,7 +67,7 @@ export class FrameworksService {
   private isFrameworkLike(value: unknown): value is Record<string, unknown> {
     if (!this.isObject(value)) return false;
     return (
-      typeof value._id === "string" &&
+      value._id != null &&
       typeof value.name === "string" &&
       typeof value.version === "string" &&
       typeof value.isActive === "boolean" &&
@@ -95,6 +95,10 @@ export class FrameworksService {
 
   private normalizeFrameworkLike(doc: Record<string, unknown>): Record<string, unknown> {
     const normalized: Record<string, unknown> = { ...doc };
+    const rawId = normalized._id;
+    if (rawId instanceof Types.ObjectId || typeof rawId === "string" || typeof rawId === "number") {
+      normalized._id = rawId.toString();
+    }
     if (this.isObject(normalized.content)) {
       const next = normalizeContentToNewShape(normalized.content);
       if (next) normalized.content = next;
@@ -102,7 +106,64 @@ export class FrameworksService {
     return normalized;
   }
 
-  async update(id: string, updateFrameworkDto: UpdateFrameworkDto, user?: RequestUser): Promise<Framework> {
+  private toObjectId(id: string): Types.ObjectId | null {
+    return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : null;
+  }
+
+  private async updateLegacyWrappedFramework(
+    id: string,
+    updatePayload: Omit<UpdateFrameworkDto, "lastKnownUpdatedAt">,
+    lastKnownUpdatedAt?: string,
+  ): Promise<Record<string, unknown> | null> {
+    const objectId = this.toObjectId(id);
+    const lookup = objectId ? { "data._id": { $in: [objectId, id] } } : { "data._id": id };
+    const legacyDoc = await this.frameworkModel.collection.findOne(lookup);
+    if (!legacyDoc || !this.isObject(legacyDoc)) return null;
+
+    const wrappedData: unknown = (legacyDoc as { data?: unknown }).data;
+    if (!Array.isArray(wrappedData)) return null;
+
+    const frameworkIndex = wrappedData.findIndex((item) => {
+      if (!this.isObject(item)) return false;
+      const itemId = item._id;
+      if (itemId instanceof Types.ObjectId) return itemId.toString() === id;
+      if (typeof itemId === "string" || typeof itemId === "number") return itemId.toString() === id;
+      return false;
+    });
+    if (frameworkIndex < 0) return null;
+
+    const currentFramework: unknown = wrappedData[frameworkIndex];
+    if (!this.isObject(currentFramework) || !this.isFrameworkLike(currentFramework)) return null;
+
+    if (lastKnownUpdatedAt) {
+      const currentUpdatedAt = currentFramework.updatedAt;
+      const currentUpdatedAtIso =
+        currentUpdatedAt instanceof Date
+          ? currentUpdatedAt.toISOString()
+          : typeof currentUpdatedAt === "string"
+            ? new Date(currentUpdatedAt).toISOString()
+            : null;
+      if (currentUpdatedAtIso !== null && currentUpdatedAtIso !== new Date(lastKnownUpdatedAt).toISOString()) {
+        throw new ConflictException("The framework was modified by another user. Please refresh and submit again.");
+      }
+    }
+
+    const nextFramework: Record<string, unknown> = {
+      ...currentFramework,
+      ...updatePayload,
+      updatedAt: new Date().toISOString(),
+    };
+    wrappedData[frameworkIndex] = nextFramework;
+
+    await this.frameworkModel.collection.updateOne({ _id: legacyDoc._id }, { $set: { data: wrappedData } });
+    return this.normalizeFrameworkLike(nextFramework);
+  }
+
+  async update(
+    id: string,
+    updateFrameworkDto: UpdateFrameworkDto,
+    user?: RequestUser,
+  ): Promise<Record<string, unknown>> {
     const { lastKnownUpdatedAt, ...updatePayload } = updateFrameworkDto as UpdateFrameworkDto & {
       lastKnownUpdatedAt?: string;
     };
@@ -112,7 +173,13 @@ export class FrameworksService {
 
     if (user?.sub) {
       const oldDoc = await this.frameworkModel.findById(id).lean().exec();
-      if (oldDoc?.content) previousContent = oldDoc.content as Record<string, unknown>;
+      if (oldDoc?.content) {
+        previousContent = oldDoc.content as Record<string, unknown>;
+      } else {
+        const existing = await this.findOne(id);
+        const content = existing.content;
+        if (this.isObject(content)) previousContent = content;
+      }
     }
 
     let updated: Framework | null;
@@ -128,7 +195,24 @@ export class FrameworksService {
       }
     } else {
       updated = await this.frameworkModel.findByIdAndUpdate(id, updatePayload, queryOptions).exec();
-      if (!updated) throw new NotFoundException("Framework not found");
+    }
+
+    if (!updated) {
+      const legacyUpdated = await this.updateLegacyWrappedFramework(id, updatePayload, lastKnownUpdatedAt);
+      if (!legacyUpdated) throw new NotFoundException("Framework not found");
+      if (user?.sub) {
+        const newContent = legacyUpdated.content;
+        await this.revisionsService.record({
+          action: "updated",
+          frameworkId: String(legacyUpdated._id),
+          frameworkName: String(legacyUpdated.name),
+          frameworkVersion: String(legacyUpdated.version),
+          userId: user.sub,
+          previousContent,
+          newContent: this.isObject(newContent) ? newContent : undefined,
+        });
+      }
+      return legacyUpdated;
     }
 
     if (user?.sub) {
@@ -138,7 +222,7 @@ export class FrameworksService {
         newContent: newContent && typeof newContent === "object" ? newContent : undefined,
       });
     }
-    return updated;
+    return this.normalizeFrameworkLike(updated.toObject() as Record<string, unknown>);
   }
 
   async findAll(): Promise<Record<string, unknown>[]> {

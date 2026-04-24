@@ -76,18 +76,14 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
   const saveMutation = useMutation({
     mutationFn: async ({
       next,
-      lastKnownUpdatedAt,
       id,
     }: {
       next: Framework;
-      lastKnownUpdatedAt: string | undefined;
       id: string | null;
     }) => {
       const payload = toPayload(next);
       if (id) {
-        return updateFrameworkVersion(id, payload, {
-          ...(lastKnownUpdatedAt && { lastKnownUpdatedAt }),
-        });
+        return updateFrameworkVersion(id, payload);
       }
       return createFrameworkVersion(payload);
     },
@@ -119,7 +115,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       if (!cat) return;
       next.content.categories[categoryIndex] = { ...cat, ...payload };
       setFrameworkDraft(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      saveMutation.mutate({ next, id: frameworkId });
       setEditing(null);
     },
     [framework, frameworkId, saveMutation],
@@ -131,7 +127,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       const next = shallowCloneFramework(framework);
       next.content.categories.splice(categoryIndex, 1);
       setFrameworkDraft(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      saveMutation.mutate({ next, id: frameworkId });
       setEditing(null);
     },
     [framework, frameworkId, saveMutation],
@@ -191,7 +187,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
         ...payload,
       };
       setFrameworkDraft(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      saveMutation.mutate({ next, id: frameworkId });
       setEditing(null);
     },
     [framework, frameworkId, saveMutation],
@@ -203,7 +199,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       const next = shallowCloneFramework(framework);
       next.content.categories[categoryIndex].subcategories.splice(subcategoryIndex, 1);
       setFrameworkDraft(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      saveMutation.mutate({ next, id: frameworkId });
       setEditing(null);
     },
     [framework, frameworkId, saveMutation],
@@ -248,7 +244,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
         ...payload,
       };
       setFrameworkDraft(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      saveMutation.mutate({ next, id: frameworkId });
       setEditing(null);
     },
     [framework, frameworkId, saveMutation],
@@ -260,7 +256,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
       const next = shallowCloneFramework(framework);
       next.content.categories[categoryIndex].subcategories[subcategoryIndex].instructions.splice(instructionIndex, 1);
       setFrameworkDraft(next);
-      saveMutation.mutate({ next, lastKnownUpdatedAt: framework?.updatedAt, id: frameworkId });
+      saveMutation.mutate({ next, id: frameworkId });
       setEditing(null);
     },
     [framework, frameworkId, saveMutation],
