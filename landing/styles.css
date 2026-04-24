@@ -24,15 +24,19 @@
   /* Mix ratios (0–1) used with color-mix */
   --mix-border-on-text: 8%;
   --mix-accent-soft-bg: 15%;
-  --mix-header-backdrop: 85%;
-  --mix-nav-backdrop: 98%;
   --mix-hero-accent-glow: 12%;
   --mix-hero-secondary-glow: 10%;
 
   --color-border: color-mix(in srgb, var(--color-text) var(--mix-border-on-text), transparent);
   --color-accent-soft: color-mix(in srgb, var(--color-accent) var(--mix-accent-soft-bg), transparent);
-  --color-backdrop-header: color-mix(in srgb, var(--color-bg-base) var(--mix-header-backdrop), transparent);
-  --color-backdrop-nav: color-mix(in srgb, var(--color-bg-base) var(--mix-nav-backdrop), transparent);
+
+  /* Header strip (light — matches Synapse logo white canvas) */
+  --color-header-surface: #ffffff;
+  --color-header-ink: #1a2332;
+  --color-header-link-muted: #5c6678;
+  --color-header-border: color-mix(in srgb, var(--color-header-ink) 12%, transparent);
+  --color-header-toggle-bg: #f4f6f8;
+  --shadow-header: 0 1px 0 color-mix(in srgb, var(--color-header-ink) 8%, transparent);
 
   /* —— Typography —— */
   --font-family-sans: "DM Sans", system-ui, sans-serif;
@@ -85,7 +89,6 @@
   --radius-lg: 12px;
   --radius-pill: 999px;
   --radius-card-sm: 10px;
-  --radius-logo: var(--radius-md);
 
   /* —— Layout —— */
   --width-container: 1100px;
@@ -103,9 +106,9 @@
   --gap-nav-toggle: 5px;
   --size-arch-dot: 8px;
   --size-arch-badge: 1.75rem;
+  --logo-max-height: calc(var(--header-height) - var(--space-xl));
 
   /* —— Effects & motion —— */
-  --blur-header: 12px;
   --z-header: 50;
   --z-skip-link: 100;
 
@@ -184,9 +187,9 @@ body {
   top: 0;
   z-index: var(--z-header);
   height: var(--header-height);
-  background: var(--color-backdrop-header);
-  backdrop-filter: blur(var(--blur-header));
-  border-bottom: 1px solid var(--color-border);
+  background: var(--color-header-surface);
+  border-bottom: 1px solid var(--color-header-border);
+  box-shadow: var(--shadow-header);
 }
 
 .header-inner {
@@ -204,18 +207,18 @@ body {
   align-items: center;
   gap: var(--space-md);
   text-decoration: none;
-  color: var(--color-text);
+  color: var(--color-header-ink);
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-ui);
 }
 
 .logo-img {
-  border-radius: var(--radius-logo);
-}
-
-.logo-text {
-  font-family: var(--font-family-display);
-  letter-spacing: var(--letter-spacing-tight);
+  display: block;
+  height: auto;
+  width: auto;
+  max-height: var(--logo-max-height);
+  max-width: min(220px, 46vw);
+  object-fit: contain;
 }
 
 .nav-toggle {
@@ -226,9 +229,9 @@ body {
   width: var(--width-nav-toggle);
   height: var(--width-nav-toggle);
   padding: 0;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-header-border);
   border-radius: var(--radius-md);
-  background: var(--color-bg-card);
+  background: var(--color-header-toggle-bg);
   cursor: pointer;
 }
 
@@ -237,7 +240,7 @@ body {
   width: var(--width-nav-toggle-bar);
   height: var(--height-nav-toggle-bar);
   margin-inline: auto;
-  background: var(--color-text);
+  background: var(--color-header-ink);
   border-radius: 1px;
   transition: transform var(--duration-medium) var(--ease-default),
     opacity var(--duration-medium) var(--ease-default);
@@ -265,16 +268,16 @@ body {
   padding: 0;
 }
 
-.site-nav a {
-  color: var(--color-text-muted);
+.site-header .site-nav a {
+  color: var(--color-header-link-muted);
   text-decoration: none;
   font-size: var(--font-size-nav);
   font-weight: var(--font-weight-medium);
   transition: color var(--duration-fast) var(--ease-default);
 }
 
-.site-nav a:hover,
-.site-nav a:focus-visible {
+.site-header .site-nav a:hover,
+.site-header .site-nav a:focus-visible {
   color: var(--color-accent);
 }
 
@@ -673,8 +676,8 @@ body {
     top: var(--header-height);
     left: 0;
     right: 0;
-    background: var(--color-backdrop-nav);
-    border-bottom: 1px solid var(--color-border);
+    background: var(--color-header-surface);
+    border-bottom: 1px solid var(--color-header-border);
     padding: var(--space-lg);
     transform-origin: top;
     transform: scaleY(0);
@@ -695,7 +698,7 @@ body {
     gap: var(--space-md);
   }
 
-  .site-nav a {
+  .site-header .site-nav a {
     display: block;
     padding: var(--space-md) 0;
   }
