@@ -43,7 +43,7 @@ export const FrameworkTree = ({ frameworkId: frameworkIdProp, focusItemId }: Fra
   const { data, isLoading, error } = editById ? byIdQuery : activeQuery;
   const [frameworkDraft, setFrameworkDraft] = useState<Framework | null>(null);
   const frameworkId = data?.id ?? null;
-  const framework = frameworkDraft && frameworkDraft._id === data?.framework?._id ? frameworkDraft : (data?.framework ?? null);
+  const framework = frameworkDraft ?? (data?.framework ?? null);
   const [editing, setEditing] = useState<EditingTarget | null>(null);
   const [pendingDelete, setPendingDelete] = useState<EditingTarget | null>(null);
   const [conflictMessage, setConflictMessage] = useState<string | null>(null);
