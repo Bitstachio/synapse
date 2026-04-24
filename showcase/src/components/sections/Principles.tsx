@@ -4,22 +4,22 @@ const principles = [
   {
     icon: '👤',
     title: 'Human-Centered Design',
-    desc: 'Prioritizing usability and clarity for employees above all else — designed for real people in real workflows.',
+    desc: 'Prioritizing usability and clarity for employees above all else - designed for real people in real workflows.',
   },
   {
     icon: '🔍',
     title: 'Transparency',
-    desc: "Ensuring users understand why decisions are made — not just what is flagged, but the reasoning behind every violation.",
+    desc: "Ensuring users understand why decisions are made - not just what is flagged, but the reasoning behind every violation.",
   },
   {
     icon: '⚡',
     title: 'Efficiency',
-    desc: 'Reducing the time and effort required to interpret complex policies — turning minutes of searching into seconds of guidance.',
+    desc: 'Reducing the time and effort required to interpret complex policies - turning minutes of searching into seconds of guidance.',
   },
   {
     icon: '🤝',
     title: 'Trust',
-    desc: 'Building employee confidence in AI systems through consistent, accurate guidance and support — not surveillance.',
+    desc: 'Building employee confidence in AI systems through consistent, accurate guidance and support - not surveillance.',
   },
 ];
 

@@ -10,14 +10,14 @@ export default function Hero() {
       aria-label="Hero"
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-950"
     >
-      {/* Static ambient glows — CSS only, no JS */}
+      {/* Static ambient glows - CSS only, no JS */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[160px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-violet-600/10 blur-[140px]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] rounded-full bg-blue-500/5 blur-[100px]" />
       </div>
 
-      {/* Dot grid — CSS only */}
+      {/* Dot grid - CSS only */}
       <div
         className="absolute inset-0 opacity-[0.025] pointer-events-none"
         aria-hidden="true"
@@ -27,7 +27,7 @@ export default function Hero() {
         }}
       />
 
-      {/* Content — CSS fade-in, no framer-motion */}
+      {/* Content - CSS fade-in, no framer-motion */}
       <div className="hero-fade-in relative z-10 section-container pt-24 pb-16 text-center">
         {/* Eyebrow */}
         <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.2em] uppercase text-blue-400 mb-8">
@@ -47,10 +47,10 @@ export default function Hero() {
         {/* Subtitle */}
         <p className="text-base sm:text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
           A governance framework and Jira-integrated MVP that guides employees through responsible
-          AI adoption — protecting well-being, privacy, and security in real time.
+          AI adoption - protecting well-being, privacy, and security in real time.
         </p>
 
-        {/* CTAs — pure CSS hover via .btn-primary / .btn-ghost */}
+        {/* CTAs - pure CSS hover via .btn-primary / .btn-ghost */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button onClick={() => scrollTo('#solution')} className="btn-primary w-full sm:w-auto">
             Explore the Solution →

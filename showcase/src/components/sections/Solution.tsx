@@ -14,7 +14,7 @@ const pillars = [
     gradient: 'from-violet-500 to-purple-600',
     title: 'Jira-Aligned Plug-in',
     description:
-      'Scans each ticket created in Jira against the framework. Any non-compliance is flagged to the user with the specific principle breached — making policy operational inside everyday workflows.',
+      'Scans each ticket created in Jira against the framework. Any non-compliance is flagged to the user with the specific principle breached - making policy operational inside everyday workflows.',
     points: ['Seamless Jira integration', 'Real-time violation detection', 'Specific breach highlighting'],
   },
 ];
@@ -40,7 +40,7 @@ export default function Solution() {
             <span className="gradient-text">One coherent system.</span>
           </h2>
           <p className="text-lg text-slate-400">
-            An ethical governance framework aligned with employee well-being, privacy, and security — and a
+            An ethical governance framework aligned with employee well-being, privacy, and security - and a
             project-management integration that puts that framework inside the tools teams already use.
           </p>
         </motion.div>
@@ -94,7 +94,7 @@ export default function Solution() {
               <p className="text-slate-400 leading-relaxed">
                 An AI-powered website guides users in real time: identify potential violations, understand
                 associated risks, and make informed revisions. Combining structured governance with intuitive
-                interaction — transforming static policy documents into dynamic, actionable support.
+                interaction - transforming static policy documents into dynamic, actionable support.
               </p>
             </div>
             <div className="hidden md:flex gap-4 flex-shrink-0">

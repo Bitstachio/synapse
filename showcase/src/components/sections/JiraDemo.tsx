@@ -51,7 +51,7 @@ export default function JiraDemo() {
               <div className="w-3 h-3 rounded-full bg-green-500/60" />
             </div>
             <div className="flex-1 bg-white/5 rounded px-3 py-1 text-xs text-slate-500 font-mono">
-              Synapse AI Assurance — Jira Plugin
+              Synapse AI Assurance - Jira Plugin
             </div>
           </div>
           {/* Screenshot */}

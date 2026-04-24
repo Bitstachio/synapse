@@ -39,7 +39,7 @@ const steps = [
   {
     num: 6,
     title: 'Feedback Interface',
-    desc: 'Employee reviews suggestions, revises, and resubmits — closing the loop.',
+    desc: 'Employee reviews suggestions, revises, and resubmits - closing the loop.',
     color: 'from-pink-500 to-rose-500',
     icon: '↩',
   },
@@ -66,7 +66,7 @@ export default function Architecture() {
             <span className="gradient-text">6-step pipeline</span>
           </h2>
           <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            From user input to compliant, understandable output — every step designed to reduce
+            From user input to compliant, understandable output - every step designed to reduce
             cognitive load and support informed decision-making.
           </p>
         </motion.div>

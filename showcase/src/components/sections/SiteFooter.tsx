@@ -35,7 +35,7 @@ export default function SiteFooter() {
               <span className="font-bold text-white text-base">Synapse</span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed mb-4">
-              Human-Centered AI Assurance Framework — a governance framework and MVP for responsible
+              Human-Centered AI Assurance Framework - a governance framework and MVP for responsible
               AI adoption.
             </p>
             <p className="text-xs text-slate-600">
@@ -121,7 +121,7 @@ export default function SiteFooter() {
           className="border-t border-white/[.06] pt-8"
         >
           <p className="text-xs text-slate-600 text-center mb-3 uppercase tracking-wider">
-            Capstone Collective — Authors
+            Capstone Collective - Authors
           </p>
           <p className="text-xs text-slate-500 text-center">
             Max Catricala · Alessandro Tesa · Natalia Garcia · Amirhossein Mansouri · Barbod Habibi · Rameen Kahloon · Aabrar Raiyan

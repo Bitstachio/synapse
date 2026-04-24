@@ -15,7 +15,7 @@ const limitations = [
     title: 'Internal AI Surveillance Systems',
     problem: 'Constant monitoring to "ensure safety and productivity."',
     detail:
-      "Constant digital surveillance creates profound psychological unsafety. High cost, used as justification for increased monitoring — it backfires into negative effects on employees' psyche.",
+      "Constant digital surveillance creates profound psychological unsafety. High cost, used as justification for increased monitoring - it backfires into negative effects on employees' psyche.",
     tag: 'Psychological Unsafety',
     tagColor: 'text-red-400 bg-red-400/10 border-red-400/20',
   },
@@ -57,11 +57,11 @@ export default function ExistingSolutions() {
             </span>
           </h2>
           <p className="text-base sm:text-lg text-slate-400 max-w-2xl">
-            Most companies take one of two approaches. Both protect the organization — neither protects employees.
+            Most companies take one of two approaches. Both protect the organization - neither protects employees.
           </p>
         </motion.div>
 
-        {/* Cards — single motion wrapper for all three */}
+        {/* Cards - single motion wrapper for all three */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -96,7 +96,7 @@ export default function ExistingSolutions() {
           className="text-center text-slate-500 text-sm mt-8 sm:mt-10 italic px-4"
         >
           "Although many solutions keep the company and employees 'safe,' the limitations often backfire
-          — negatively affecting employees' psyche and leading to distrust."
+          - negatively affecting employees' psyche and leading to distrust."
         </motion.p>
       </div>
     </section>

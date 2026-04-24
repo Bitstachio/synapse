@@ -45,7 +45,7 @@ export default function Conclusion() {
 
           <p className="text-xl md:text-2xl text-slate-200 leading-relaxed text-center font-medium mb-6">
             This project addresses the <span className="gradient-text font-bold">micro-alignment gap</span> —
-            how emerging technologies touch individual well-being, security, and privacy — through an ethical
+            how emerging technologies touch individual well-being, security, and privacy - through an ethical
             framework and tooling that scans work items for gaps against human-centric rules.
           </p>
 
@@ -53,7 +53,7 @@ export default function Conclusion() {
             <div className="card-glass p-4">
               <p className="text-sm font-semibold text-white mb-2">For TD Bank</p>
               <p className="text-sm text-slate-400">
-                A structured, scalable way to implement AI — one that currently lacks institutional precedent
+                A structured, scalable way to implement AI - one that currently lacks institutional precedent
                 at TD, but can now expand across departments.
               </p>
             </div>
